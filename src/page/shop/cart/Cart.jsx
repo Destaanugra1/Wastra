@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react'; // Import useState
 import { Link, useNavigate } from 'react-router-dom';
 import Navbar from '../../../components/Navbar';
 import { useCart } from '../../../context/CartContext';
@@ -7,18 +7,25 @@ const Cart = () => {
   const navigate = useNavigate();
   const {
     cartItems,
-    loading,
+    // loading dari useCart ini mungkin hanya untuk loading data keranjang awal
+    // kita akan tambahkan loading state lokal untuk proses checkout
     handleRemoveItem,
     handleQuantityChange,
     handleClearCart,
+    loading: cartLoading, // rename loading dari useCart agar tidak konflik
   } = useCart();
 
+  const [isCheckingOut, setIsCheckingOut] = useState(false); // State baru untuk proses checkout
   const VITE_API_URL = import.meta.env.VITE_API_URL;
 
-  // Load Snap.js (Tidak ada perubahan)
+  // Load Snap.js (Tidak ada perubahan, tapi penting untuk dipastikan hanya load sekali)
   const loadSnap = useCallback(() => {
     return new Promise((res, rej) => {
-      if (document.getElementById('midtrans-snap-script')) return res();
+      // Pastikan script hanya ditambahkan sekali
+      if (document.getElementById('midtrans-snap-script')) {
+        console.log('Snap.js script already loaded.');
+        return res();
+      }
       const script = document.createElement('script');
       script.id = 'midtrans-snap-script';
       script.src =
@@ -30,8 +37,14 @@ const Cart = () => {
         'data-client-key',
         import.meta.env.VITE_MIDTRANS_CLIENT_KEY
       );
-      script.onload = () => res();
-      script.onerror = () => rej(new Error('Gagal load Snap.js'));
+      script.onload = () => {
+        console.log('Snap.js loaded successfully.');
+        res();
+      };
+      script.onerror = () => {
+        console.error('Failed to load Snap.js');
+        rej(new Error('Gagal load Snap.js'));
+      };
       document.head.appendChild(script);
     });
   }, []);
@@ -52,19 +65,35 @@ const Cart = () => {
     0
   );
 
-  const handleCheckout = async () => {
-    const user = JSON.parse(localStorage.getItem('user'));
-    if (!cartItems.length || !user) return;
-    const cartId = cartItems.length > 0 ? cartItems[0].cart_id : null;
-    if (!cartId) {
-      alert('Keranjang tidak valid.');
+  const handleCheckout = async (event) => {
+    event.preventDefault(); // Mencegah perilaku default form submission jika tombol ada di dalam form
+
+    if (isCheckingOut) {
+      // Cek apakah proses checkout sedang berlangsung
+      console.log('Checkout sudah sedang diproses. Mengabaikan klik ganda.');
       return;
     }
+
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (!cartItems.length || !user) {
+      alert('Keranjang kosong atau pengguna belum login.');
+      return;
+    }
+
+    // Pastikan cartId valid
+    const cartId = cartItems.length > 0 ? cartItems[0].cart_id : null;
+    if (!cartId) {
+      alert('Keranjang tidak valid. Silakan coba lagi.');
+      return;
+    }
+
+    setIsCheckingOut(true); // Set state checkout menjadi true
+
     try {
+      console.log('Memulai proses checkout untuk cart_id:', cartId);
       const response = await fetch(`${VITE_API_URL}/api/checkout`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        // KIRIM cart_id, bukan userId dan items
         body: JSON.stringify({
           cart_id: cartId,
           username: user.nama,
@@ -76,31 +105,56 @@ const Cart = () => {
       });
 
       const data = await response.json();
-      if (!data.snapToken)
-        throw new Error('Gagal mendapatkan token pembayaran');
+      console.log('Respons dari backend:', data);
 
+      if (!response.ok) {
+        // Cek status respons HTTP
+        throw new Error(
+          data.messages?.error ||
+            'Gagal mendapatkan token pembayaran dari server.'
+        );
+      }
+
+      if (!data.snapToken) {
+        throw new Error(
+          'Respons tidak memiliki snapToken. Gagal mendapatkan token pembayaran.'
+        );
+      }
+
+      console.log('Membuka Midtrans Snap dengan token:', data.snapToken);
       window.snap.pay(data.snapToken, {
         onSuccess: function (result) {
+          console.log('Midtrans onSuccess:', result);
           alert('Pembayaran berhasil!');
-          handleClearCart();
+          handleClearCart(); // Bersihkan keranjang setelah sukses
           navigate('/success');
         },
         onPending: function (result) {
+          console.log('Midtrans onPending:', result);
           alert('Transaksi sedang diproses!');
-          handleClearCart();
-          navigate('/success');
+          handleClearCart(); // Bersihkan keranjang meskipun pending
+          navigate('/success'); // Mungkin arahkan ke halaman status pending
         },
         onError: function (result) {
+          console.log('Midtrans onError:', result);
           alert('Pembayaran gagal!');
+        },
+        onClose: function () {
+          // Pengguna menutup pop-up Midtrans tanpa menyelesaikan transaksi
+          console.log('Midtrans pop-up ditutup oleh pengguna.');
+          // Anda bisa tambahkan logika di sini jika perlu, misal tidak clear cart
         },
       });
     } catch (error) {
-      console.error('Gagal checkout:', error);
-      alert('Gagal memproses pembayaran');
+      console.error('Gagal checkout:', error.message); // Tampilkan pesan error yang lebih spesifik
+      alert(`Gagal memproses pembayaran: ${error.message}`);
+    } finally {
+      setIsCheckingOut(false); // Pastikan state kembali false setelah proses selesai (berhasil/gagal)
     }
   };
 
-  if (loading) {
+  if (cartLoading) {
+    // Gunakan cartLoading untuk loading data keranjang awal
     return (
       <>
         <Navbar />
@@ -157,7 +211,8 @@ const Cart = () => {
                       onClick={() =>
                         handleQuantityChange(item, Number(item.jumlah) - 1)
                       }
-                      disabled={loading}
+                      // Gunakan isCheckingOut juga untuk menonaktifkan tombol quantity
+                      disabled={cartLoading || isCheckingOut}
                       className='w-8 h-8 flex items-center justify-center border border-gray-300 rounded-full hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed'>
                       −
                     </button>
@@ -169,7 +224,9 @@ const Cart = () => {
                         handleQuantityChange(item, Number(item.jumlah) + 1)
                       }
                       disabled={
-                        Number(item.jumlah) >= Number(item.stok) || loading
+                        Number(item.jumlah) >= Number(item.stok) ||
+                        cartLoading ||
+                        isCheckingOut
                       }
                       className='w-8 h-8 flex items-center justify-center border border-gray-300 rounded-full hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed'>
                       +
@@ -185,7 +242,7 @@ const Cart = () => {
                   </div>
                   <button
                     onClick={() => handleRemoveItem(item.id_item)}
-                    disabled={loading}
+                    disabled={cartLoading || isCheckingOut} // Gunakan isCheckingOut
                     className='text-red-500 hover:text-red-700 text-xl font-bold w-8 h-8 flex items-center justify-center disabled:opacity-50'
                     title='Hapus item'>
                     ×
@@ -227,9 +284,12 @@ const Cart = () => {
             </div>
             <button
               onClick={handleCheckout}
-              disabled={!cartItems.length || loading}
+              disabled={!cartItems.length || cartLoading || isCheckingOut} // Tambahkan isCheckingOut
               className='w-full bg-[#5a3b24] text-white py-3 rounded-lg hover:bg-[#4a2f1f] disabled:opacity-50 disabled:cursor-not-allowed font-medium mb-4'>
-              {loading ? 'Memproses...' : 'Lanjut ke Pembayaran'}
+              {isCheckingOut
+                ? 'Memproses Pembayaran...'
+                : 'Lanjut ke Pembayaran'}{' '}
+              {/* Ubah teks tombol */}
             </button>
             <Link
               to='/toko'
