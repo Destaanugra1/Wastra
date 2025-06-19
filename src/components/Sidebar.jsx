@@ -10,6 +10,7 @@ import {
   Settings,
   Menu,
   X,
+  Shirt,
 } from 'lucide-react';
 import { generateRandomCode } from '../service/RandomUrl';
 
@@ -21,12 +22,12 @@ const Sidebar = () => {
   const location = useLocation();
 
   const menuItems = [
-    { icon: Home, label: 'Halaman Produk', path: '/toko' },
+    { icon: Home, label: 'Halaman Admin', path: '/utama' },
     { icon: Package, label: 'Produk', path: `${url}` },
     { icon: Plus, label: 'Tambah Produk', path: '/create' },
     { icon: Users, label: 'Pengguna', path: '/users' },
     { icon: ShoppingCart, label: 'Pesanan', path: '/orders' },
-    { icon: BarChart3, label: 'Laporan', path: '/reports' },
+    { icon: Shirt, label: 'Category', path: '/category' },
   ];
 
   const isActiveRoute = (path) => {

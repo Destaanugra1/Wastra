@@ -16,7 +16,7 @@ const isAdmin = user.role === 'admin';
 
 export const Modaldrop = () => {
   return (
-    <div className='cursor-pointer border'>
+    <div className='cursor-pointer'>
       <DropdownMenu>
         <div className='cursor-point'>
           <DropdownMenuTrigger>

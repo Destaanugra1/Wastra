@@ -16,6 +16,8 @@ import DetailUser from './page/users/DetailUser';
 import ListUser from './page/dashboard/ListUser';
 import PaymentSuccess from './page/shop/PaymentSucces';
 import Cart from './page/shop/cart/Cart';
+import HomeAdmin from './page/dashboard/HomeAdmin';
+import CategoryPage from './page/dashboard/Category';
 
 
 function UrlAdmin() {
@@ -71,6 +73,22 @@ function App() {
           element={
             <ProtectedRoute adminOnly>
               <EditProducr />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path='/category'
+          element={
+            <ProtectedRoute adminOnly>
+              <CategoryPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path='/utama'
+          element={
+            <ProtectedRoute adminOnly>
+              <HomeAdmin />
             </ProtectedRoute>
           }
         />
