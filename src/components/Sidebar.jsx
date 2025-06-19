@@ -11,6 +11,7 @@ import {
   Menu,
   X,
   Shirt,
+  ChartColumn,
 } from 'lucide-react';
 import { generateRandomCode } from '../service/RandomUrl';
 
@@ -28,6 +29,7 @@ const Sidebar = () => {
     { icon: Users, label: 'Pengguna', path: '/users' },
     { icon: ShoppingCart, label: 'Pesanan', path: '/orders' },
     { icon: Shirt, label: 'Category', path: '/category' },
+    { icon: ChartColumn, label: 'Laporan Statistik', path: '/laporan' },
   ];
 
   const isActiveRoute = (path) => {

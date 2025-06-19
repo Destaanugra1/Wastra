@@ -18,6 +18,8 @@ import PaymentSuccess from './page/shop/PaymentSucces';
 import Cart from './page/shop/cart/Cart';
 import HomeAdmin from './page/dashboard/HomeAdmin';
 import CategoryPage from './page/dashboard/Category';
+import Orders from './page/dashboard/Orders';
+import Laporan from './page/dashboard/Laporan';
 
 
 function UrlAdmin() {
@@ -81,6 +83,22 @@ function App() {
           element={
             <ProtectedRoute adminOnly>
               <CategoryPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path='/orders'
+          element={
+            <ProtectedRoute adminOnly>
+              <Orders />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path='/laporan'
+          element={
+            <ProtectedRoute adminOnly>
+              <Laporan />
             </ProtectedRoute>
           }
         />

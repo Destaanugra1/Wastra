@@ -314,7 +314,7 @@ const Dashboard = () => {
               <div className="p-5">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-500">Total Verified Users</p>
+                    <p className="text-sm font-medium text-gray-500">Total User Login</p>
                     <h3 className="text-3xl font-bold text-gray-800 mt-1">{stats.verifiedUsers}</h3>
                   </div>
                   <div className="p-3 bg-blue-50 rounded-lg">
@@ -333,7 +333,7 @@ const Dashboard = () => {
               <div className="p-5">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-500">Successful Purchases</p>
+                    <p className="text-sm font-medium text-gray-500">Pembelian Succes</p>
                     <h3 className="text-3xl font-bold text-gray-800 mt-1">{stats.successfulTransactions}</h3>
                   </div>
                   <div className="p-3 bg-green-50 rounded-lg">
@@ -352,7 +352,7 @@ const Dashboard = () => {
               <div className="p-5">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-500">Pending Purchases</p>
+                    <p className="text-sm font-medium text-gray-500">Pending Pembelian</p>
                     <h3 className="text-3xl font-bold text-gray-800 mt-1">{stats.pendingTransactions}</h3>
                   </div>
                   <div className="p-3 bg-amber-50 rounded-lg">

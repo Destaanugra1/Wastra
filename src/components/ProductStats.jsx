@@ -79,11 +79,11 @@ const ProductStats = () => {
 
   const cards = [
     {
-      title: 'Total Products',
+      title: 'Semua Produk',
       value: stats?.total || 0,
       icon: Package,
       color: 'blue',
-      description: 'Total products in system'
+      description: 'Produk di data base'
     },
   ];
 
