@@ -15,10 +15,8 @@ import {
 } from 'lucide-react';
 import { generateRandomCode } from '../service/RandomUrl';
 
-
-
 const Sidebar = () => {
-  const url = `/${generateRandomCode()}`
+  const url = `/${generateRandomCode()}`;
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
 
@@ -60,7 +58,9 @@ const Sidebar = () => {
         } lg:translate-x-0 lg:static lg:shadow-none w-64`}>
         {/* Header */}
         <div className='p-6 border-b border-gray-200'>
-          <h1 className='text-xl font-bold text-gray-800'>Admin Panel</h1>
+          <Link to="/toko">
+            <h1 className='text-xl font-bold text-gray-800'>Admin Panel</h1>
+          </Link>
         </div>
 
         {/* Navigation */}
