@@ -349,10 +349,10 @@ const DetailProduct = () => {
     return (
       <>
         <Navbar />
-        <div className='min-h-screen flex items-center justify-center bg-gradient-to-br from-stone-50 via-neutral-50 to-slate-50'>
-          <div className='text-center p-8 bg-white/80 backdrop-blur-sm rounded-2xl border border-stone-200 shadow-lg'>
-            <div className='w-16 h-16 mx-auto mb-4 border-4 border-amber-800 border-t-transparent rounded-full animate-spin'></div>
-            <p className='text-xl font-medium text-stone-700'>
+        <div className='min-h-screen flex items-center justify-center bg-gray-50'>
+          <div className='text-center p-8 bg-white rounded-lg shadow-lg'>
+            <div className='w-16 h-16 mx-auto mb-4 border-4 border-red-500 border-t-transparent rounded-full animate-spin'></div>
+            <p className='text-xl font-medium text-gray-700'>
               {isLoading
                 ? 'Memuat detail produk...'
                 : paymentMessage || 'Produk tidak ditemukan.'}
@@ -367,131 +367,146 @@ const DetailProduct = () => {
   return (
     <>
       <Navbar />
-      <div className='min-h-screen bg-gradient-to-br from-stone-50 via-neutral-50 to-slate-50 py-8'>
-        {/* Subtle Batik Pattern Background */}
-        <div className='fixed inset-0 opacity-[0.02] pointer-events-none'>
-          <div
-            className='absolute inset-0 bg-repeat'
-            style={{
-              backgroundImage: `url("data:image/svg+xml,%3Csvg width='120' height='120' viewBox='0 0 120 120' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23451a03' fill-opacity='0.4'%3E%3Cpath d='M60 60c0-16.569-13.431-30-30-30s-30 13.431-30 30 13.431 30 30 30 30-13.431 30-30zm30-30c0 16.569 13.431 30 30 30s30-13.431 30-30-13.431-30-30-30-30 13.431-30 30zm0 60c0-16.569-13.431-30-30-30s-30 13.431-30 30 13.431 30 30 30 30-13.431 30-30z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-              backgroundSize: '120px 120px',
-            }}
-          />
+      <div className='min-h-screen bg-gray-50'>
+        {/* Breadcrumb */}
+        <div className='bg-white border-b'>
         </div>
 
-        <div className='relative max-w-2xl mx-auto p-6'>
-          {/* Main Product Card */}
-          <div className='bg-white/95 backdrop-blur-sm rounded-2xl shadow-xl overflow-hidden border border-stone-200'>
-            {/* Elegant Header with Batik-inspired Pattern */}
-            <div className='h-2 bg-gradient-to-r from-amber-900 via-stone-800 to-amber-900 relative'>
-              <div
-                className='absolute inset-0 opacity-40'
-                style={{
-                  backgroundImage: `url("data:image/svg+xml,%3Csvg width='20' height='8' viewBox='0 0 20 8' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M10 4c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm0 4c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z' fill='%23fbbf24'/%3E%3C/svg%3E")`,
-                  backgroundSize: '20px 8px',
-                }}
-              />
+        <div className='max-w-7xl mx-auto px-4 py-8'>
+          <div className='grid grid-cols-1 lg:grid-cols-2 gap-8'>
+            {/* Product Image */}
+            <div className='bg-white rounded-lg shadow-sm p-6'>
+              <div className='aspect-square bg-gray-100 rounded-lg mb-4'>
+                <img
+                  src={`${VITE_API_URL}/${product.foto}`}
+                  alt={product.nama_produk}
+                  className='w-full h-full object-cover rounded-lg'
+                />
+              </div>
             </div>
 
-            <div className='p-8'>
-              {/* Product Image */}
-              <div className='relative mb-8 group'>
-                <div className='relative bg-gradient-to-br from-stone-100 to-neutral-100 rounded-xl p-3 shadow-inner'>
-                  <img
-                    src={`${VITE_API_URL}/${product.foto}`}
-                    alt={product.nama_produk}
-                    className='w-full h-80 object-cover rounded-lg shadow-md transition-transform duration-300 group-hover:scale-[1.02]'
-                  />
-                  {/* Subtle Corner Decoration */}
-                  <div className='absolute top-6 right-6 w-3 h-3 bg-amber-800 rounded-full opacity-60'></div>
-                  <div className='absolute top-8 right-8 w-2 h-2 bg-stone-600 rounded-full opacity-40'></div>
+            {/* Product Info */}
+            <div className='bg-white rounded-lg shadow-sm p-6'>
+              <h1 className='text-2xl font-bold text-gray-900 mb-4'>
+                {product.nama_produk}
+              </h1>
+              
+              {/* Price */}
+              <div className='mb-6'>
+                <div className='flex items-center space-x-2 mb-2'>
+                  <span className='text-sm text-red-500 line-through'>
+                    IDR 599.000
+                  </span>
+                </div>
+                <div className='text-2xl font-bold text-gray-900'>
+                  {Number(product.harga).toLocaleString('id-ID', {
+                    style: 'currency',
+                    currency: 'IDR',
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 0,
+                  })}
                 </div>
               </div>
 
-              {/* Product Title */}
-              <div className='text-center mb-8'>
-                <h1 className='text-3xl font-bold text-stone-800 mb-3 tracking-wide'>
-                  {product.nama_produk}
-                </h1>
-                <div className='w-20 h-px bg-gradient-to-r from-transparent via-amber-800 to-transparent mx-auto'></div>
+              {/* Options */}
+              <div className='mb-6'>
+                <h3 className='text-lg font-semibold text-gray-900 mb-3'>Options</h3>
+                <div className='mb-4'>
+                  <label className='block text-sm font-medium text-gray-700 mb-2'>
+                    Size
+                  </label>
+                  <select className='w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500'>
+                    <option>Select Size</option>
+                    <option>S</option>
+                    <option>M</option>
+                    <option>L</option>
+                    <option>XL</option>
+                  </select>
+                </div>
               </div>
 
-              {/* Price & Stock */}
-              <div className='flex justify-between items-center mb-8 p-5 bg-gradient-to-r from-stone-100 to-neutral-100 rounded-xl border border-stone-200'>
-                <div>
-                  <p className='text-sm text-stone-600 font-medium mb-1'>
-                    Harga
-                  </p>
-                  <p className='text-2xl font-bold text-stone-800'>
-                    {Number(product.harga).toLocaleString('id-ID', {
-                      style: 'currency',
-                      currency: 'IDR',
-                      minimumFractionDigits: 0,
-                      maximumFractionDigits: 0,
-                    })}
-                  </p>
+              {/* Quantity */}
+              <div className='mb-6'>
+                <div className='flex items-center space-x-4'>
+                  <span className='text-sm font-medium text-gray-700'>QTY</span>
+                  <div className='flex items-center border border-gray-300 rounded-md'>
+                    <button
+                      onClick={decreaseQuantity}
+                      disabled={quantity <= 1}
+                      className='px-3 py-1 text-gray-600 hover:text-gray-800 disabled:opacity-50'
+                    >
+                      -
+                    </button>
+                    <input
+                      type='number'
+                      min='1'
+                      max={product.stok}
+                      value={quantity}
+                      onChange={(e) =>
+                        handleQuantityChange(parseInt(e.target.value) || 1)
+                      }
+                      className='w-16 px-2 py-1 text-center border-l border-r border-gray-300 focus:outline-none'
+                    />
+                    <button
+                      onClick={increaseQuantity}
+                      disabled={quantity >= product.stok}
+                      className='px-3 py-1 text-gray-600 hover:text-gray-800 disabled:opacity-50'
+                    >
+                      +
+                    </button>
+                  </div>
+                  <button
+                    onClick={handleBuyNow}
+                    disabled={
+                      isLoading ||
+                      product.stok === 0 ||
+                      !window.snap ||
+                      !product.id_product ||
+                      quantity > product.stok
+                    }
+                    className='bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded-md font-medium disabled:opacity-50 disabled:cursor-not-allowed'
+                  >
+                    {isLoading
+                      ? 'Memproses...'
+                      : product.stok === 0
+                      ? 'STOK HABIS'
+                      : quantity > product.stok
+                      ? 'Melebihi Stok'
+                      : paymentSuccess
+                      ? 'Lanjut ke Sukses'
+                      : snapToken
+                      ? 'Lanjutkan Pembayaran'
+                      : 'Beli Sekarang'}
+                  </button>
                 </div>
-                <div className='text-right'>
-                  <p className='text-sm text-stone-600 font-medium mb-1'>
-                    Stok Tersedia
-                  </p>
-                  <p className='text-2xl font-bold text-amber-800'>
-                    {product.stok}
-                  </p>
-                </div>
+              </div>
+
+              {/* Stock Info */}
+              <div className='mb-6'>
+                <p className='text-sm text-gray-600'>
+                  Stok tersedia: <span className='font-medium'>{product.stok}</span>
+                </p>
               </div>
 
               {/* Description */}
-              <div className='mb-8 p-6 bg-gradient-to-br from-stone-50 to-neutral-50 rounded-xl border border-stone-150'>
-                <h3 className='text-lg font-semibold text-stone-800 mb-4 text-center'>
-                  Deskripsi Produk
-                </h3>
-                <p className='text-stone-700 leading-relaxed whitespace-pre-wrap text-center'>
-                  {product.deskripsi}
-                </p>
-              </div>
-
-              {/* Quantity Selector */}
-              <div className='mb-8'>
-                <label className='block text-stone-800 text-lg font-semibold mb-4 text-center'>
-                  Pilih Jumlah
-                </label>
-                <div className='flex items-center justify-center space-x-4 mb-2'>
-                  <button
-                    onClick={decreaseQuantity}
-                    disabled={quantity <= 1}
-                    className='w-11 h-11 bg-stone-800 hover:bg-stone-700 text-white font-bold rounded-lg shadow-md transform hover:scale-105 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-stone-400 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none'>
-                    −
-                  </button>
-                  <input
-                    type='number'
-                    min='1'
-                    max={product.stok}
-                    value={quantity}
-                    onChange={(e) =>
-                      handleQuantityChange(parseInt(e.target.value) || 1)
-                    }
-                    className='w-20 h-11 text-center text-lg font-semibold border-2 border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-800 focus:border-amber-800 bg-white text-stone-800'
-                  />
-                  <button
-                    onClick={increaseQuantity}
-                    disabled={quantity >= product.stok}
-                    className='w-11 h-11 bg-stone-800 hover:bg-stone-700 text-white font-bold rounded-lg shadow-md transform hover:scale-105 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-stone-400 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none'>
-                    +
-                  </button>
+              {product.deskripsi && (
+                <div className='mb-6'>
+                  <h3 className='text-lg font-semibold text-gray-900 mb-3'>
+                    Deskripsi Produk
+                  </h3>
+                  <p className='text-gray-700 leading-relaxed whitespace-pre-wrap'>
+                    {product.deskripsi}
+                  </p>
                 </div>
-                <p className='text-sm text-stone-600 text-center font-medium'>
-                  Maksimal: {product.stok} item
-                </p>
-              </div>
+              )}
 
-              {/* Total Price */}
-              <div className='mb-8 p-6 bg-gradient-to-r from-amber-900 to-stone-800 rounded-xl shadow-lg'>
-                <div className='flex justify-between items-center text-white'>
-                  <span className='text-lg font-semibold'>
+              {/* Total Price Display */}
+              <div className='bg-gray-50 p-4 rounded-lg'>
+                <div className='flex justify-between items-center'>
+                  <span className='text-lg font-semibold text-gray-900'>
                     Total Pembayaran:
                   </span>
-                  <span className='text-2xl font-bold'>
+                  <span className='text-xl font-bold text-gray-900'>
                     {totalPrice.toLocaleString('id-ID', {
                       style: 'currency',
                       currency: 'IDR',
@@ -500,7 +515,7 @@ const DetailProduct = () => {
                     })}
                   </span>
                 </div>
-                <div className='text-amber-100 text-center mt-2 font-medium'>
+                <div className='text-sm text-gray-600 text-right mt-1'>
                   {quantity} ×{' '}
                   {Number(product.harga).toLocaleString('id-ID', {
                     style: 'currency',
@@ -511,63 +526,23 @@ const DetailProduct = () => {
                 </div>
               </div>
 
-              {/* Buy Button */}
-              <button
-                onClick={handleBuyNow}
-                disabled={
-                  isLoading ||
-                  product.stok === 0 ||
-                  !window.snap ||
-                  !product.id_product ||
-                  quantity > product.stok
-                }
-                className='w-full bg-gradient-to-r from-amber-800 to-stone-800 hover:from-amber-700 hover:to-stone-700 text-white font-semibold py-4 px-6 rounded-xl shadow-lg transform hover:scale-[1.01] transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-amber-800/30 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none text-lg'>
-                {isLoading
-                  ? '⏳ Memproses Pesanan...'
-                  : product.stok === 0
-                  ? '😞 Stok Habis'
-                  : quantity > product.stok
-                  ? '⚠️ Jumlah Melebihi Stok'
-                  : paymentSuccess
-                  ? '✅ Lanjut ke Halaman Sukses'
-                  : snapToken
-                  ? '🛒 Lanjutkan Pembayaran'
-                  : '🛒 Beli Sekarang'}
-              </button>
-
               {/* Payment Message */}
               {paymentMessage && (
                 <div
-                  className={`mt-6 p-4 rounded-xl font-medium text-center shadow-md border ${
+                  className={`mt-4 p-4 rounded-lg font-medium text-center ${
                     paymentMessage.includes('Gagal') ||
                     paymentMessage.includes('Error')
-                      ? 'bg-red-50 text-red-800 border-red-200'
+                      ? 'bg-red-50 text-red-800 border border-red-200'
                       : paymentMessage.includes('Berhasil')
-                      ? 'bg-green-50 text-green-800 border-green-200'
-                      : 'bg-blue-50 text-blue-800 border-blue-200'
-                  }`}>
+                      ? 'bg-green-50 text-green-800 border border-green-200'
+                      : 'bg-blue-50 text-blue-800 border border-blue-200'
+                  }`}
+                >
                   {paymentMessage}
                 </div>
               )}
             </div>
-
-            {/* Elegant Footer */}
-            <div className='h-2 bg-gradient-to-r from-stone-800 via-amber-900 to-stone-800 relative'>
-              <div
-                className='absolute inset-0 opacity-40'
-                style={{
-                  backgroundImage: `url("data:image/svg+xml,%3Csvg width='20' height='8' viewBox='0 0 20 8' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M10 4c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm0 4c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z' fill='%23fbbf24'/%3E%3C/svg%3E")`,
-                  backgroundSize: '20px 8px',
-                }}
-              />
-            </div>
           </div>
-
-          {/* Subtle Decorative Elements */}
-          <div className='absolute -top-2 -left-2 w-4 h-4 bg-amber-800 rounded-full opacity-20'></div>
-          <div className='absolute -top-1 -right-3 w-3 h-3 bg-stone-600 rounded-full opacity-15'></div>
-          <div className='absolute -bottom-2 -left-3 w-3 h-3 bg-amber-800 rounded-full opacity-15'></div>
-          <div className='absolute -bottom-1 -right-2 w-4 h-4 bg-stone-600 rounded-full opacity-20'></div>
         </div>
       </div>
     </>
