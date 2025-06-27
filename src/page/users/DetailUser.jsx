@@ -51,6 +51,31 @@ const DetailUser = () => {
     })();
   }, [user]);
 
+  /* ---------- GET HISTORY WITH SHIPPING ---------- */
+  useEffect(() => {
+    if (user) {
+      setHistLoad(true);
+      fetch(`http://localhost:8080/history-pembelian/shipping/${user.id}`)
+        .then((res) => res.json())
+        .then((data) => {
+          console.log('Debug is_shipped:', data.history.map((order) => order.is_shipped)); // Log tipe data dan nilai is_shipped
+          setHistory(
+            data.history.map((order) => ({
+              ...order,
+              shipping_status:
+                parseInt(order.is_shipped, 10) === 1 // Pastikan perbandingan dengan integer
+                  ? 'Barang sudah sampai'
+                  : order.tracking_number && order.shipping_service
+                  ? 'Sedang diantar'
+                  : 'Sedang dikemas',
+            }))
+          );
+          setHistLoad(false);
+        })
+        .catch(() => setHistLoad(false));
+    }
+  }, [user]);
+
   /* ---------- FILTER & PAGINATION ---------- */
   const filtered = useMemo(
     () =>
@@ -285,6 +310,35 @@ const DetailUser = () => {
                           </div>
                         </details>
                       )}
+
+                      {/* shipping details */}
+                      <div className='mt-4'>
+                        <p className='text-xs text-gray-500 uppercase'>
+                          Pengiriman
+                        </p>
+                        <div className='grid grid-cols-2 gap-4'>
+                          <div>
+                            <p className='text-sm font-medium'>Status</p>
+                            <p className='text-gray-700'>
+                              {order.shipping_status}
+                            </p>
+                          </div>
+                          <div>
+                            <p className='text-sm font-medium'>Nomer Resi</p>
+                            <p className='text-gray-700'>
+                              {order.tracking_number}
+                            </p>
+                          </div>
+                          <div>
+                            <p className='text-sm font-medium'>
+                              Jasa Pengiriman
+                            </p>
+                            <p className='text-gray-700'>
+                              {order.shipping_service}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   ))}
                 </div>
