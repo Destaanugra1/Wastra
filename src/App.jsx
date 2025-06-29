@@ -20,6 +20,7 @@ import HomeAdmin from './page/dashboard/HomeAdmin';
 import CategoryPage from './page/dashboard/Category';
 import Orders from './page/dashboard/Orders';
 import Laporan from './page/dashboard/Laporan';
+import EditUser from './page/users/EditUser';
 
 
 function UrlAdmin() {
@@ -75,6 +76,14 @@ function App() {
           element={
             <ProtectedRoute adminOnly>
               <EditProducr />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path='/user/edit/:id'
+          element={
+            <ProtectedRoute>
+              <EditUser />
             </ProtectedRoute>
           }
         />

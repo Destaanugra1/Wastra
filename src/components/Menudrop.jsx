@@ -10,6 +10,8 @@ import { Link } from 'react-router-dom';
 import { generateRandomCode } from '../service/RandomUrl';
 import { Settings2 } from 'lucide-react';
 const url = `/${generateRandomCode()}`;
+const personal = JSON.parse(localStorage.getItem('user') || '{}');
+const id = personal.id;
 
 const user = JSON.parse(localStorage.getItem('user') || '{}');
 const isAdmin = user.role === 'admin';
@@ -33,9 +35,10 @@ export const Modaldrop = () => {
             </Link>
           )}
 
-          <DropdownMenuItem>Billing</DropdownMenuItem>
-          <DropdownMenuItem>Team</DropdownMenuItem>
-          <DropdownMenuItem>Subscription</DropdownMenuItem>
+          <Link to={`/user/edit/${id}`}>
+            <DropdownMenuItem>Edit Profile</DropdownMenuItem>
+          </Link>
+          <DropdownMenuItem>Team Work</DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
     </div>

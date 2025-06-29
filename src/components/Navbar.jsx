@@ -215,12 +215,30 @@ const Navbar = () => {
             </li>
             <li>
               {handleAuth ? (
-                <ButtoClick onClick={handleLogout} label='Logout' />
+                <button 
+                  onClick={handleLogout}
+                  className="inline-flex items-center justify-center px-5 py-2 rounded-full bg-gradient-to-r from-[#c09064] to-[#8d572c] text-white font-medium shadow-lg hover:shadow-xl transition-all duration-300 relative overflow-hidden group"
+                >
+                  <span className="relative z-10 flex items-center">
+                    <svg className="w-4 h-4 mr-1.5" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clipRule="evenodd" />
+                    </svg>
+                    Logout
+                  </span>
+                  <div className="absolute inset-0 bg-gradient-to-r from-[#e06c13] to-[#a03e0d] opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                </button>
               ) : (
                 <Link
                   to='/login'
-                  className='block py-2 px-3 text-gray-900 rounded-sm hover:bg-gray-100 md:hover:bg-transparent md:border-0 md:hover:text-blue-700 md:p-0 md:dark:hover:text-blue-500 dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent'>
-                  Login
+                  className="inline-flex items-center justify-center px-5 py-2 rounded-full bg-gradient-to-r from-[#c09064] to-[#8d572c] text-white font-medium shadow-lg hover:shadow-xl transition-all duration-300 relative overflow-hidden"
+                >
+                  <span className="relative z-10 flex items-center">
+                    <svg className="w-4 h-4 mr-1.5" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+                    </svg>
+                    Login
+                  </span>
+                  <div className="absolute inset-0 bg-gradient-to-r from-[#e06c13] to-[#a03e0d] opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 </Link>
               )}
             </li>

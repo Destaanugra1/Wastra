@@ -21,6 +21,8 @@ const DetailUser = () => {
     (async () => {
       try {
         const res = await getUserById(id);
+        console.log("Nama saya:", res.data.data);
+        
         setUser(res.data.data ?? null);
       } catch (e) {
         console.error(e);
@@ -142,11 +144,11 @@ const DetailUser = () => {
               <div className='flex items-center space-x-4'>
                 <div className='w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center'>
                   <span className='text-white font-semibold text-lg'>
-                    {user.nama?.[0]?.toUpperCase() ?? 'U'}
+                    {user.username?.[0]?.toUpperCase() ?? 'D'}
                   </span>
                 </div>
                 <div>
-                  <h1 className='text-2xl font-bold'>{user.nama}</h1>
+                  <h1 className='text-2xl font-bold'>{user.username}</h1>
                   <p className='text-gray-600'>{user.email}</p>
                 </div>
               </div>

@@ -73,7 +73,7 @@ const EditProduct = () => {
       const res = await updateProduct(id, formData);
       if (res.data.status === 'success') {
         setAlertMsg('Produk berhasil diupdate!');
-        setTimeout(() => navigate('/toko'), 500);
+        setTimeout(() => navigate('/utama'), 500);
       } else {
         setErrors(res.data.message || {});
       }
