@@ -25,7 +25,16 @@ const Navbar = () => {
   };
 
   const getUsername = () => {
-    return user.nama || user.email || 'User';
+    if (user.nama) {
+      // Jika ada nama, ambil hanya nama depan (kata pertama)
+      const firstName = user.nama.split(' ')[0];
+      return firstName;
+    }
+    // Jika tidak ada nama, gunakan bagian depan email atau default 'User'
+    if (user.email) {
+      return user.email.split('@')[0];
+    }
+    return 'User';
   };
 
   const getTotalPrice = () => {

@@ -21,6 +21,7 @@ import CategoryPage from './page/dashboard/Category';
 import Orders from './page/dashboard/Orders';
 import Laporan from './page/dashboard/Laporan';
 import EditUser from './page/users/EditUser';
+import Footer from './components/Footer';
 
 
 function UrlAdmin() {
@@ -144,6 +145,7 @@ function App() {
           }
         />
       </Routes>
+      <Footer />
     </>
   );
 }
