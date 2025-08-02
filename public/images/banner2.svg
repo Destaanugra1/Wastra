@@ -1,0 +1,14 @@
+<!-- SVG placeholder untuk banner2 -->
+<svg width="1920" height="600" viewBox="0 0 1920 600" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="grad2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#f093fb;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#f5576c;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <rect width="1920" height="600" fill="url(#grad2)"/>
+  <polygon points="200,100 350,100 275,250" fill="rgba(255,255,255,0.1)"/>
+  <polygon points="1600,400 1750,400 1675,550" fill="rgba(255,255,255,0.1)"/>
+  <circle cx="1400" cy="150" r="90" fill="rgba(255,255,255,0.1)"/>
+  <text x="960" y="320" text-anchor="middle" font-family="Arial, sans-serif" font-size="48" fill="rgba(255,255,255,0.3)">DISKON HINGGA 50%</text>
+</svg>

@@ -16,7 +16,6 @@ export const getCartByUser = async (userId) => {
 // Add product to cart
 export const addToCart = async (data) => {
   try {
-    // Ganti endpoint ke '/api/cart' yang akan ditangani oleh method create()
     const response = await axios.post(`${VITE_API_URL}/api/cart`, data);
     return response;
   } catch (error) {

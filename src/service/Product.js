@@ -22,6 +22,24 @@ export function listProduct() {
   return axios.get(`${ApiUrl}/product`);
 }
 
+export function listProductPaginated(params = {}) {
+  const searchParams = new URLSearchParams();
+
+  if (params.page) searchParams.append('page', params.page);
+  if (params.per_page) searchParams.append('per_page', params.per_page);
+  if (params.search) searchParams.append('search', params.search);
+  if (params.category_id)
+    searchParams.append('category_id', params.category_id);
+  if (params.randomize !== undefined)
+    searchParams.append('randomize', params.randomize);
+
+  return axios.get(`${ApiUrl}/product/paginated?${searchParams.toString()}`);
+}
+
+export function getProductCategories() {
+  return axios.get(`${ApiUrl}/product/categories`);
+}
+
 export function updateProduct(id, formData) {
   return axios.post(`${ApiUrl}/product/update/${id}`, formData);
 }

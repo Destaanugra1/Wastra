@@ -22,7 +22,9 @@ import Orders from './page/dashboard/Orders';
 import Laporan from './page/dashboard/Laporan';
 import EditUser from './page/users/EditUser';
 import Footer from './components/Footer';
-
+import AOS from 'aos';
+import { useEffect } from 'react';
+import 'aos/dist/aos.css';
 
 function UrlAdmin() {
   const { code } = useParams();
@@ -38,6 +40,13 @@ function UrlAdmin() {
 }
 
 function App() {
+  useEffect(() => {
+    AOS.init({
+      duration: 800,
+      once: true,
+    });
+  }, []);
+
   return (
     <>
       <Routes>

@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
-import 'flowbite/dist/flowbite.min.js';
 import { ButtoClick } from './Button';
 import Logo from '../assets/Logo.png';
 import { useCart } from '../context/CartContext'; // <-- IMPORT HOOK
@@ -189,7 +188,7 @@ const Navbar = () => {
                   `block py-2 px-3 rounded-sm md:bg-transparent md:p-0 ${
                     isActive
                       ? 'text-[#dbaa7c] bg-blue-100 md:text-[#dbaa7c]'
-                      : 'text-[#efe3b8] hover:bg-gray-100 md:hover:bg-transparent md:hover:text-[#dbaa7c] md:dark:hover:text-blue-500 dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent'
+                      : 'text-[#efe3b8] hover:bg-gray-100 md:hover:bg-transparent md:hover:text-[#dbaa7c] md:dark:hover:text-shadow-gray-600 dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent'
                   }`
                 }
                 end>
@@ -203,7 +202,7 @@ const Navbar = () => {
                   `block py-2 px-3 rounded-sm md:bg-transparent md:p-0 ${
                     isActive
                       ? 'text-[#dbaa7c] bg-blue-100 md:text-[#dbaa7c]'
-                      : 'text-[#efe3b8] hover:bg-gray-100 md:hover:bg-transparent md:hover:text-[#dbaa7c] md:dark:hover:text-blue-500 dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent'
+                      : 'text-[#efe3b8] hover:bg-gray-100 md:hover:bg-transparent md:hover:text-[#dbaa7c] md:dark:hover:text-shadow-gray-600 dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent'
                   }`
                 }>
                 Profile
@@ -216,7 +215,7 @@ const Navbar = () => {
                   `block py-2 px-3 rounded-sm md:bg-transparent md:p-0 ${
                     isActive
                       ? 'text-[#dbaa7c] bg-blue-100 md:text-[#dbaa7c]'
-                      : 'text-[#efe3b8] hover:bg-gray-100 md:hover:bg-transparent md:hover:text-[#dbaa7c] md:dark:hover:text-blue-500 dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent'
+                      : 'text-[#efe3b8] hover:bg-gray-100 md:hover:bg-transparent md:hover:text-[#dbaa7c] md:dark:hover:text-shadow-gray-600 dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent'
                   }`
                 }>
                 Toko

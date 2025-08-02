@@ -1,626 +1,335 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import Navbar from '../../components/Navbar';
-import { listProduct } from '../../service/Product';
-import { Link } from 'react-router-dom';
-import { useCart } from '../../context/CartContext';
-import { ShoppingCart } from 'lucide-react';
+
+import Pagination from '../../components/Pagination';
+import SearchAndFilter from '../../components/SearchAndFilter';
+import {
+  listProductPaginated,
+  getProductCategories,
+} from '../../service/Product';
+import { Component } from '../../components/Banner';
 
 const Product = () => {
   const [products, setProducts] = useState([]);
-  const [filteredProducts, setFilteredProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [addLoadingId, setAddLoadingId] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [categories, setCategories] = useState([]);
+  const [pagination, setPagination] = useState({
+    current_page: 1,
+    per_page: 12,
+    total: 0,
+    total_pages: 0,
+    has_next: false,
+    has_prev: false,
+  });
 
-  // Filter states
-  const [selectedCategory, setSelectedCategory] = useState('all');
-  const [priceRange, setPriceRange] = useState([0, 1000000]);
-  const [maxPrice, setMaxPrice] = useState(1000000);
-  const [sortBy, setSortBy] = useState('name');
-  const [viewMode, setViewMode] = useState('grid'); // grid or list
+  const [searchParams, setSearchParams] = useSearchParams();
 
-  // Carousel state
-  const [currentSlide, setCurrentSlide] = useState(0);
+  // Memoized function to update URL params
+  const updateUrlParams = useCallback(
+    (page, search, category_id) => {
+      const params = new URLSearchParams();
+      if (page > 1) params.set('page', page.toString());
+      if (search) params.set('search', search);
+      if (category_id) params.set('category_id', category_id);
 
-  const { handleAddToCart, cartItems } = useCart();
-
-  // Carousel banners
-  const banners = [
-    {
-      id: 1,
-      title: 'Koleksi Terbaru',
-      subtitle: 'Temukan produk eksklusif dengan kualitas terbaik',
-      image:
-        'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1200&h=400&fit=crop',
-      bgColor: 'from-amber-800 to-yellow-800',
+      setSearchParams(params, { replace: true });
     },
-    {
-      id: 2,
-      title: 'Promo Spesial',
-      subtitle: 'Diskon hingga 50% untuk produk pilihan',
-      image:
-        'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=1200&h=400&fit=crop',
-      bgColor: 'from-yellow-800 to-amber-900',
-    },
-    {
-      id: 3,
-      title: 'Kualitas Premium',
-      subtitle: 'Produk berkualitas tinggi dengan harga terjangkau',
-      image:
-        'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=1200&h=400&fit=crop',
-      bgColor: 'from-amber-900 to-yellow-900',
-    },
-  ];
+    [setSearchParams]
+  );
 
+  const [filters, setFilters] = useState(() => {
+    const searchParam = searchParams.get('search') || '';
+    const categoryParam = searchParams.get('category_id') || '';
+
+    return {
+      page: parseInt(searchParams.get('page')) || 1,
+      per_page: 8,
+      search: searchParam,
+      category_id: categoryParam,
+      randomize: true, // Selalu acak setiap refresh
+    };
+  });
+
+  const VITE_API_URL = import.meta.env.VITE_API_URL;
+
+  // Fetch categories on component mount
   useEffect(() => {
-    const fetchProduct = async () => {
+    const fetchCategories = async () => {
       try {
-        setLoading(true);
-        const res = await listProduct();
-        const productsData = res.data.data || [];
-        setProducts(productsData);
-
-        // Set max price for range slider
-        if (productsData.length > 0) {
-          const maxPriceValue = Math.max(
-            ...productsData.map((p) => Number(p.harga))
-          );
-          setMaxPrice(maxPriceValue);
-          setPriceRange([0, maxPriceValue]);
+        const response = await getProductCategories();
+        if (response.data && response.data.status === 'success') {
+          setCategories(response.data.data || []);
         }
       } catch (err) {
-        console.log(err);
-        setProducts([]);
-      } finally {
-        setLoading(false);
+        console.error('Error fetching categories:', err);
       }
     };
-    fetchProduct();
+
+    fetchCategories();
   }, []);
 
-  // Filter and sort products
+  // Fetch products with filters
   useEffect(() => {
-    let filtered = [...products];
+    const fetchProducts = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
 
-    // Filter by category (PASTIKAN FIELDNYA SAMA DENGAN YANG DI ADMIN, misal 'category' atau 'nama_category')
-    if (selectedCategory !== 'all') {
-      filtered = filtered.filter(
-        (product) =>
-          (product.category || product.nama_category) &&
-          ((product.category &&
-            product.category.toLowerCase() ===
-              selectedCategory.toLowerCase()) ||
-            (product.nama_category &&
-              product.nama_category.toLowerCase() ===
-                selectedCategory.toLowerCase()))
-      );
-    }
+        const response = await listProductPaginated(filters);
+        console.log('Products response:', response.data);
 
-    // Filter by price range
-    filtered = filtered.filter((product) => {
-      const price = Number(product.harga);
-      return price >= priceRange[0] && price <= priceRange[1];
-    });
-
-    // Sort products
-    filtered.sort((a, b) => {
-      switch (sortBy) {
-        case 'price-low':
-          return Number(a.harga) - Number(b.harga);
-        case 'price-high':
-          return Number(b.harga) - Number(a.harga);
-        case 'name':
-          return a.nama_produk.localeCompare(b.nama_produk);
-        case 'newest':
-          return new Date(b.created_at || 0) - new Date(a.created_at || 0);
-        default:
-          return 0;
+        if (response.data && response.data.status === 'success') {
+          setProducts(response.data.data || []);
+          setPagination(response.data.pagination || {});
+        } else {
+          throw new Error(
+            response.data?.message || 'Gagal mengambil daftar produk'
+          );
+        }
+      } catch (err) {
+        console.error('Error fetching products:', err);
+        setError(err.message);
+      } finally {
+        setIsLoading(false);
       }
-    });
+    };
 
-    setFilteredProducts(filtered);
-  }, [products, selectedCategory, priceRange, sortBy]);
+    fetchProducts();
+  }, [filters]);
 
-  // Auto-advance carousel
+  // Handler functions (simplified without URL update)
+  const handlePageChange = useCallback((page) => {
+    setFilters((prev) => ({ ...prev, page }));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
+
+  const handleSearch = useCallback((search) => {
+    setFilters((prev) => ({ ...prev, search, page: 1, randomize: true }));
+  }, []);
+
+  const handleCategoryFilter = useCallback((category_id) => {
+    setFilters((prev) => ({
+      ...prev,
+      category_id,
+      page: 1,
+      randomize: true,
+    }));
+  }, []);
+
+  const handleClearAll = useCallback(() => {
+    setFilters((prev) => ({
+      ...prev,
+      search: '',
+      category_id: '',
+      page: 1,
+      randomize: true,
+    }));
+    // Clear URL completely
+    setSearchParams({}, { replace: true });
+  }, [setSearchParams]);
+
+  // Update URL when filters change
   useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % banners.length);
-    }, 5000);
-    return () => clearInterval(timer);
-  }, [banners.length]);
+    updateUrlParams(filters.page, filters.search, filters.category_id);
+  }, [filters.page, filters.search, filters.category_id, updateUrlParams]);
 
-  const getCartQuantity = (productId) => {
-    const cartItem = cartItems.find((item) => item.product_id === productId);
-    return cartItem ? Number(cartItem.jumlah) : 0;
-  };
+  // Clear search params if they are empty on component mount
+  useEffect(() => {
+    const searchParam = searchParams.get('search');
+    const categoryParam = searchParams.get('category_id');
 
-  const handleAdd = async (item) => {
-    if (addLoadingId === item.id_product) return;
-    setAddLoadingId(item.id_product);
-    await handleAddToCart(item);
-    setAddLoadingId(null);
-  };
+    // If there are empty search/category params in URL, remove them
+    if (
+      (searchParam === '' || !searchParam) &&
+      (categoryParam === '' || !categoryParam)
+    ) {
+      const pageParam = searchParams.get('page');
+      const params = new URLSearchParams();
+      if (pageParam && pageParam !== '1') {
+        params.set('page', pageParam);
+      }
+      setSearchParams(params, { replace: true });
+    }
+  }, [searchParams, setSearchParams]); // Run when URL params change
 
-  // Get unique categories (PASTIKAN FIELDNYA SAMA DENGAN YANG DI ADMIN)
-  const categories = [
-    'all',
-    ...Array.from(
-      new Set(
-        products.map((p) => p.category || p.nama_category).filter(Boolean)
-      )
-    ),
-  ];
+  if (isLoading) {
+    return (
+      <>
+        <Navbar />
+        <div className='min-h-screen flex items-center justify-center bg-gray-50'>
+          <div className='text-center p-8 bg-white rounded-lg shadow-lg'>
+            <div className='w-16 h-16 mx-auto mb-4 border-4 border-red-500 border-t-transparent rounded-full animate-spin'></div>
+            <p className='text-xl font-medium text-gray-700'>
+              Memuat produk...
+            </p>
+          </div>
+        </div>
+      </>
+    );
+  }
 
-  const formatPrice = (price) => {
-    return Number(price).toLocaleString('id-ID', {
-      style: 'currency',
-      currency: 'IDR',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    });
-  };
+  if (error) {
+    return (
+      <>
+        <Navbar />
+        <div className='min-h-screen flex items-center justify-center bg-gray-50'>
+          <div className='text-center p-8 bg-white rounded-lg shadow-lg'>
+            <p className='text-xl font-medium text-red-600'>Error: {error}</p>
+          </div>
+        </div>
+      </>
+    );
+  }
 
   return (
     <>
       <Navbar />
+      <div className='min-h-screen bg-gray-50'>
+        <div className='max-w-7xl mx-auto px-4 py-8'>
+          {/* Banner Carousel */}
 
-      {/* Hero Carousel */}
-      <div className='relative h-96 overflow-hidden'>
-        {banners.map((banner, index) => (
-          <div
-            key={banner.id}
-            className={`absolute inset-0 transition-transform duration-700 ease-in-out ${
-              index === currentSlide
-                ? 'translate-x-0'
-                : index < currentSlide
-                ? '-translate-x-full'
-                : 'translate-x-full'
-            }`}>
-            <div
-              className={`w-full h-full bg-gradient-to-r ${banner.bgColor} relative`}>
-              <div
-                className='absolute inset-0 bg-cover bg-center opacity-30'
-                style={{ backgroundImage: `url(${banner.image})` }}
-              />
-              <div className='relative z-10 container mx-auto px-4 h-full flex items-center'>
-                <div className='text-white max-w-2xl'>
-                  <h1 className='text-5xl font-bold mb-4'>{banner.title}</h1>
-                  <p className='text-xl mb-8 opacity-90'>{banner.subtitle}</p>
-                  <button className='bg-white text-amber-900 px-8 py-3 rounded-lg font-semibold hover:bg-amber-50 transition-colors'>
-                    Jelajahi Sekarang
-                  </button>
-                </div>
-              </div>
+          <Component />
+          
+          <h1
+            className='text-3xl font-bold text-gray-900 mb-8'
+            data-aos='fade-up'>
+            Toko Produk
+          </h1>
+
+          {/* Search and Filter */}
+          <SearchAndFilter
+            onSearch={handleSearch}
+            onCategoryFilter={handleCategoryFilter}
+            onClearAll={handleClearAll}
+            categories={categories}
+            isLoading={isLoading}
+            initialSearch={searchParams.get('search') || ''}
+            initialCategory={searchParams.get('category_id') || ''}
+            className='mb-8'
+          />
+
+          {/* Results Info */}
+          {!isLoading && !error && (
+            <div className='mb-6' data-aos='fade-up'>
+              <p className='text-gray-600'>
+                Menampilkan {products.length} dari {pagination.total} produk
+                {filters.search && ` untuk "${filters.search}"`}
+                {filters.category_id &&
+                  categories.length > 0 &&
+                  ` dalam kategori "${
+                    categories.find((c) => c.id_category == filters.category_id)
+                      ?.nama_category
+                  }"`}
+              </p>
             </div>
-          </div>
-        ))}
+          )}
 
-        {/* Carousel Indicators */}
-        <div className='absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2'>
-          {banners.map((_, index) => (
-            <button
-              key={index}
-              onClick={() => setCurrentSlide(index)}
-              className={`w-3 h-3 rounded-full transition-colors ${
-                index === currentSlide ? 'bg-white' : 'bg-white/50'
-              }`}
-            />
-          ))}
-        </div>
-
-        {/* Carousel Navigation */}
-        <button
-          onClick={() =>
-            setCurrentSlide(
-              (prev) => (prev - 1 + banners.length) % banners.length
-            )
-          }
-          className='absolute left-4 top-1/2 transform -translate-y-1/2 bg-white/20 hover:bg-white/30 text-white p-2 rounded-full transition-colors'>
-          <svg
-            className='w-6 h-6'
-            fill='none'
-            stroke='currentColor'
-            viewBox='0 0 24 24'>
-            <path
-              strokeLinecap='round'
-              strokeLinejoin='round'
-              strokeWidth='2'
-              d='M15 19l-7-7 7-7'
-            />
-          </svg>
-        </button>
-        <button
-          onClick={() => setCurrentSlide((prev) => (prev + 1) % banners.length)}
-          className='absolute right-4 top-1/2 transform -translate-y-1/2 bg-white/20 hover:bg-white/30 text-white p-2 rounded-full transition-colors'>
-          <svg
-            className='w-6 h-6'
-            fill='none'
-            stroke='currentColor'
-            viewBox='0 0 24 24'>
-            <path
-              strokeLinecap='round'
-              strokeLinejoin='round'
-              strokeWidth='2'
-              d='M9 5l7 7-7 7'
-            />
-          </svg>
-        </button>
-      </div>
-
-      <div className='container mx-auto px-4 py-8'>
-        {/* Filters Section */}
-        <div className='bg-white rounded-xl shadow-lg p-6 mb-8 border border-amber-100'>
-          <div className='flex flex-wrap items-center gap-6'>
-            {/* Category Filter */}
-            <div className='flex-1 min-w-64'>
-              <label className='block text-sm font-medium text-amber-900 mb-2'>
-                Kategori
-              </label>
-              <select
-                value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
-                className='w-full px-4 py-2 border border-amber-300 rounded-lg focus:ring-2 focus:ring-amber-600 focus:border-amber-600'>
-                {categories.map((category) => (
-                  <option key={category} value={category}>
-                    {category === 'all' ? 'Semua Kategori' : category}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Price Range */}
-            <div className='flex-1 min-w-64'>
-              <label className='block text-sm font-medium text-amber-900 mb-2'>
-                Range Harga: {formatPrice(priceRange[0])} -{' '}
-                {formatPrice(priceRange[1])}
-              </label>
-              <div className='px-2'>
-                <input
-                  type='range'
-                  min='0'
-                  max={maxPrice}
-                  value={priceRange[1]}
-                  onChange={(e) =>
-                    setPriceRange([priceRange[0], Number(e.target.value)])
-                  }
-                  className='w-full h-2 bg-amber-200 rounded-lg appearance-none cursor-pointer slider'
-                />
-              </div>
-            </div>
-
-            {/* Sort Options */}
-            <div className='flex-1 min-w-48'>
-              <label className='block text-sm font-medium text-amber-900 mb-2'>
-                Urutkan
-              </label>
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                className='w-full px-4 py-2 border border-amber-300 rounded-lg focus:ring-2 focus:ring-amber-600 focus:border-amber-600'>
-                <option value='name'>Nama A-Z</option>
-                <option value='price-low'>Harga Terendah</option>
-                <option value='price-high'>Harga Tertinggi</option>
-                <option value='newest'>Terbaru</option>
-              </select>
-            </div>
-
-            {/* View Mode Toggle */}
-            <div className='flex items-center space-x-2'>
-              <button
-                onClick={() => setViewMode('grid')}
-                className={`p-2 rounded-lg ${
-                  viewMode === 'grid'
-                    ? 'bg-amber-100 text-amber-800'
-                    : 'text-gray-400 hover:text-gray-600'
-                }`}>
+          {products.length === 0 && !isLoading && !error ? (
+            <div className='text-center py-12' data-aos='fade-up'>
+              <div className='max-w-md mx-auto'>
                 <svg
-                  className='w-5 h-5'
-                  fill='currentColor'
-                  viewBox='0 0 20 20'>
-                  <path d='M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z' />
-                </svg>
-              </button>
-              <button
-                onClick={() => setViewMode('list')}
-                className={`p-2 rounded-lg ${
-                  viewMode === 'list'
-                    ? 'bg-amber-100 text-amber-800'
-                    : 'text-gray-400 hover:text-gray-600'
-                }`}>
-                <svg
-                  className='w-5 h-5'
-                  fill='currentColor'
-                  viewBox='0 0 20 20'>
+                  className='mx-auto h-12 w-12 text-gray-400 mb-4'
+                  fill='none'
+                  stroke='currentColor'
+                  viewBox='0 0 24 24'>
                   <path
-                    fillRule='evenodd'
-                    d='M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z'
-                    clipRule='evenodd'
+                    strokeLinecap='round'
+                    strokeLinejoin='round'
+                    strokeWidth={2}
+                    d='M9.172 16.172a4 4 0 015.656 0M9 12h6m-6-4h6m2 5.291A7.962 7.962 0 0112 15c-2.34 0-4.54-.94-6.159-2.47C7.84 10.452 9.8 9 12 9s4.16 1.452 6.159 3.53A7.962 7.962 0 0112 15z'
                   />
                 </svg>
-              </button>
+                <p className='text-gray-600 text-lg mb-2'>
+                  {filters.search || filters.category_id
+                    ? 'Tidak ada produk yang sesuai dengan kriteria pencarian'
+                    : 'Belum ada produk tersedia'}
+                </p>
+                {(filters.search || filters.category_id) && (
+                  <button
+                    onClick={() => {
+                      // Clear filters and URL params completely
+                      setFilters((prev) => ({
+                        ...prev,
+                        search: '',
+                        category_id: '',
+                        page: 1,
+                        randomize: true,
+                      }));
+                      // Clear URL completely (no search params)
+                      setSearchParams({}, { replace: true });
+                    }}
+                    className='text-blue-600 hover:text-blue-800 font-medium'>
+                    Hapus filter dan lihat semua produk
+                  </button>
+                )}
+              </div>
             </div>
-          </div>
-        </div>
-
-        {/* Results Info */}
-        <div className='flex justify-between items-center mb-6'>
-          <p className='text-gray-600'>
-            Menampilkan {filteredProducts.length} dari {products.length} produk
-          </p>
-          <div className='text-sm text-gray-500'>
-            {selectedCategory !== 'all' && `Kategori: ${selectedCategory} • `}
-            {formatPrice(priceRange[0])} - {formatPrice(priceRange[1])}
-          </div>
-        </div>
-
-        {/* Products Grid */}
-        {loading ? (
-          <div className='text-center py-20'>
-            <div className='relative'>
-              <div className='animate-spin rounded-full h-16 w-16 border-4 border-amber-200 border-t-amber-800 mx-auto'></div>
-              <div className='absolute inset-0 rounded-full bg-gradient-to-r from-amber-100 to-yellow-100 opacity-20 animate-pulse'></div>
-            </div>
-            <p className='mt-6 text-lg font-medium text-amber-800'>
-              Memuat koleksi terbaru...
-            </p>
-          </div>
-        ) : filteredProducts.length > 0 ? (
-          <div
-            className={
-              viewMode === 'grid'
-                ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8'
-                : 'space-y-4'
-            }>
-            {filteredProducts.map((item) => {
-              const cartQuantity = getCartQuantity(item.id_product);
-
-              if (viewMode === 'list') {
-                return (
+          ) : (
+            <>
+              <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8'>
+                {products.map((product, index) => (
                   <div
-                    key={item.id_product}
-                    className='bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-amber-100 flex'>
-                    <div className='w-48 h-48 flex-shrink-0'>
-                      <img
-                        src={`${import.meta.env.VITE_API_URL}/${item.foto}`}
-                        alt={item.nama_produk}
-                        className='w-full h-full object-cover'
-                      />
-                    </div>
-                    <div className='flex-1 p-6 flex flex-col justify-between'>
-                      <div>
-                        <h3 className='text-xl font-bold text-gray-800 mb-2'>
-                          {item.nama_produk}
+                    key={product.id_product}
+                    className='bg-white rounded-lg shadow-sm hover:shadow-lg transition-shadow duration-300'
+                    data-aos='fade-up'
+                    data-aos-delay={index * 100}>
+                    <Link to={`/product/${product.id_product}`}>
+                      <div className='aspect-square bg-gray-100 rounded-t-lg overflow-hidden'>
+                        <img
+                          src={`${VITE_API_URL}/${product.foto}`}
+                          alt={product.nama_produk}
+                          className='w-full h-full object-cover hover:scale-105 transition-transform duration-300'
+                          onError={(e) => {
+                            e.target.src = '/placeholder-product.jpg';
+                          }}
+                        />
+                      </div>
+                      <div className='p-4'>
+                        <h3 className='font-semibold text-gray-900 mb-2 line-clamp-2'>
+                          {product.nama_produk}
                         </h3>
-                        <p className='text-gray-600 text-sm mb-4 line-clamp-2'>
-                          {item.deskripsi}
+                        <p className='text-2xl font-bold text-gray-900 mb-2'>
+                          {Number(product.harga).toLocaleString('id-ID', {
+                            style: 'currency',
+                            currency: 'IDR',
+                            minimumFractionDigits: 0,
+                            maximumFractionDigits: 0,
+                          })}
                         </p>
-                        <div className='flex items-center gap-4 mb-4'>
-                          <span className='text-2xl font-bold text-amber-800'>
-                            {formatPrice(item.harga)}
+                        <div className='flex justify-between items-center text-sm text-gray-600'>
+                          <span
+                            className={`font-medium ${
+                              product.stok > 0
+                                ? 'text-green-600'
+                                : 'text-red-600'
+                            }`}>
+                            Stok: {product.stok}
                           </span>
-                          <div className='flex items-center gap-1'>
-                            <div
-                              className={`w-2 h-2 rounded-full ${
-                                item.stok > 10
-                                  ? 'bg-green-400'
-                                  : item.stok > 0
-                                  ? 'bg-yellow-400'
-                                  : 'bg-red-400'
-                              }`}></div>
-                            <span className='text-xs text-gray-500'>
-                              {item.stok > 10
-                                ? 'Tersedia'
-                                : item.stok > 0
-                                ? `Sisa ${item.stok}`
-                                : 'Habis'}
-                            </span>
-                          </div>
-                          {cartQuantity > 0 && (
-                            <span className='bg-amber-100 text-amber-900 text-xs px-2 py-1 rounded-full'>
-                              {cartQuantity} di keranjang
-                            </span>
-                          )}
+                          <span className='bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs'>
+                            {product.kategori || 'Umum'}
+                          </span>
                         </div>
                       </div>
-                      <div className='flex gap-3'>
-                        <button
-                          onClick={() => handleAdd(item)}
-                          disabled={
-                            item.stok === 0 ||
-                            cartQuantity >= item.stok ||
-                            addLoadingId === item.id_product
-                          }
-                          className='flex-1 bg-gradient-to-r from-amber-700 to-yellow-700 hover:from-amber-800 hover:to-yellow-800 text-white font-semibold px-6 py-2 rounded-lg transition-all duration-300 disabled:from-gray-400 disabled:to-gray-400 disabled:cursor-not-allowed'>
-                          {addLoadingId === item.id_product
-                            ? 'Menambah...'
-                            : item.stok === 0
-                            ? 'Habis'
-                            : cartQuantity >= item.stok
-                            ? 'Maksimal'
-                            : 'Tambah ke Keranjang'}
-                        </button>
-                        <Link
-                          to={`/product/${item.id_product}`}
-                          className='px-4 py-2 border border-amber-700 text-amber-700 rounded-lg hover:bg-amber-50 transition-colors'>
-                          Detail
-                        </Link>
-                      </div>
-                    </div>
-                  </div>
-                );
-              }
-              // Grid view (original card design with minor updates)
-              return (
-                <div
-                  key={item.id_product}
-                  className='group relative bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden border border-amber-100 hover:border-amber-200 transform hover:-translate-y-2'>
-                  <div className='absolute top-0 right-0 w-0 h-0 border-l-[20px] border-l-transparent border-t-[20px] border-t-amber-100 z-10'></div>
-
-                  <div className='relative overflow-hidden rounded-t-2xl'>
-                    <img
-                      src={`${import.meta.env.VITE_API_URL}/${item.foto}`}
-                      alt={item.nama_produk}
-                      className='w-full h-56 object-cover group-hover:scale-110 transition-transform duration-700'
-                    />
-                    <div className='absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300'></div>
-
-                    {cartQuantity > 0 && (
-                      <div className='absolute top-3 left-3 bg-gradient-to-r from-amber-700 to-yellow-700 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg animate-pulse'>
-                        <span className='flex items-center gap-1'>
-                          <svg
-                            className='w-3 h-3'
-                            fill='currentColor'
-                            viewBox='0 0 20 20'>
-                            <path d='M3 1a1 1 0 000 2h1.22l.305 1.222a.997.997 0 00.01.042l1.358 5.43-.893.892C3.74 11.846 4.632 14 6.414 14H15a1 1 0 000-2H6.414l1-1H14a1 1 0 00.894-.553l3-6A1 1 0 0017 3H6.28l-.31-1.243A1 1 0 005 1H3zM16 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM6.5 18a1.5 1.5 0 100-3 1.5 1.5 0 000 3z' />
-                          </svg>
-                          {cartQuantity}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className='p-6 flex-grow'>
-                    <h2 className='text-xl font-bold text-gray-800 mb-2 group-hover:text-amber-800 transition-colors duration-300 line-clamp-1'>
-                      {item.nama_produk}
-                    </h2>
-                    <div className='flex items-center gap-2 mb-3'>
-                      <span className='text-2xl font-bold bg-gradient-to-r from-amber-800 to-yellow-800 bg-clip-text text-transparent'>
-                        {formatPrice(item.harga)}
-                      </span>
-                    </div>
-                    <p className='text-gray-600 text-sm leading-relaxed line-clamp-2'>
-                      {item.deskripsi}
-                    </p>
-
-                    <div className='mt-3 flex items-center gap-2'>
-                      <div className='flex items-center gap-1'>
-                        <div
-                          className={`w-2 h-2 rounded-full ${
-                            item.stok > 10
-                              ? 'bg-green-400'
-                              : item.stok > 0
-                              ? 'bg-yellow-400'
-                              : 'bg-red-400'
-                          }`}></div>
-                        <span className='text-xs text-gray-500'>
-                          {item.stok > 10
-                            ? 'Stok tersedia'
-                            : item.stok > 0
-                            ? `Sisa ${item.stok}`
-                            : 'Habis'}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className='p-6 pt-0 space-y-3'>
-                    <button
-                      onClick={() => handleAdd(item)}
-                      disabled={
-                        item.stok === 0 ||
-                        cartQuantity >= item.stok ||
-                        addLoadingId === item.id_product
-                      }
-                      className='w-full bg-gradient-to-r from-amber-700 to-yellow-700 hover:from-amber-800 hover:to-yellow-800 text-white font-semibold px-6 py-3 rounded-xl transition-all duration-300 disabled:from-gray-400 disabled:to-gray-400 disabled:cursor-not-allowed transform active:scale-95 shadow-lg hover:shadow-xl'>
-                      {addLoadingId === item.id_product ? (
-                        <span className='flex items-center justify-center gap-2'>
-                          <svg
-                            className='animate-spin w-4 h-4'
-                            fill='none'
-                            viewBox='0 0 24 24'>
-                            <circle
-                              cx='12'
-                              cy='12'
-                              r='10'
-                              stroke='currentColor'
-                              strokeWidth='4'
-                              className='opacity-25'></circle>
-                            <path
-                              fill='currentColor'
-                              d='m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z'
-                              className='opacity-75'></path>
-                          </svg>
-                          Menambah...
-                        </span>
-                      ) : item.stok === 0 ? (
-                        'Stok Habis'
-                      ) : cartQuantity >= item.stok ? (
-                        'Maksimal di Keranjang'
-                      ) : (
-                        <span className='flex items-center justify-center gap-2'>
-                          <ShoppingCart />
-                        </span>
-                      )}
-                    </button>
-
-                    <Link
-                      to={`/product/${item.id_product}`}
-                      className='block text-center text-amber-800 hover:text-amber-900 font-medium text-sm py-2 hover:bg-amber-50 rounded-lg transition-all duration-300 border border-amber-300 hover:border-amber-400'>
-                      Lihat Detail →
                     </Link>
                   </div>
+                ))}
+              </div>
 
-                  <div className='absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-amber-200 via-yellow-200 to-amber-200 opacity-50'></div>
-                </div>
-              );
-            })}
-          </div>
-        ) : (
-          <div className='text-center py-20'>
-            <div className='w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-amber-100 to-yellow-100 rounded-full flex items-center justify-center'>
-              <svg
-                className='w-12 h-12 text-amber-800'
-                fill='none'
-                stroke='currentColor'
-                viewBox='0 0 24 24'>
-                <path
-                  strokeLinecap='round'
-                  strokeLinejoin='round'
-                  strokeWidth='2'
-                  d='M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z'
-                />
-              </svg>
-            </div>
-            <h3 className='text-2xl font-bold text-gray-700 mb-2'>
-              Tidak Ada Produk
-            </h3>
-            <p className='text-gray-500 mb-4'>
-              Tidak ditemukan produk dengan filter yang dipilih
-            </p>
-            <button
-              onClick={() => {
-                setSelectedCategory('all');
-                setPriceRange([0, maxPrice]);
-              }}
-              className='px-6 py-3 bg-amber-700 text-white rounded-lg hover:bg-amber-800 transition-colors'>
-              Reset Filter
-            </button>
-          </div>
-        )}
+              {/* Pagination */}
+              <Pagination
+                currentPage={pagination.current_page}
+                totalPages={pagination.total_pages}
+                onPageChange={handlePageChange}
+                hasNext={pagination.has_next}
+                hasPrev={pagination.has_prev}
+                className='mt-8'
+              />
+            </>
+          )}
+        </div>
       </div>
-
-      {/* Custom CSS for range slider */}
-      <style jsx>{`
-        .slider::-webkit-slider-thumb {
-          appearance: none;
-          height: 20px;
-          width: 20px;
-          border-radius: 50%;
-          background: #92400e;
-          cursor: pointer;
-          border: 2px solid #ffffff;
-          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-        }
-
-        .slider::-moz-range-thumb {
-          height: 20px;
-          width: 20px;
-          border-radius: 50%;
-          background: #92400e;
-          cursor: pointer;
-          border: 2px solid #ffffff;
-          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-        }
-      `}</style>
     </>
   );
 };
