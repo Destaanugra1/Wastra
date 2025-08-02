@@ -112,11 +112,26 @@ const PaymentSuccess = () => {
   }, [orderId, navigate, searchParams]);
 
   const handleBackToHome = () => {
+    // Get user ID from localStorage to redirect to profile
+    try {
+      const storedUserData = localStorage.getItem('user');
+      if (storedUserData) {
+        const userData = JSON.parse(storedUserData);
+        const userId = userData.id;
+        if (userId) {
+          navigate(`/user/detail/${userId}`);
+          return;
+        }
+      }
+    } catch (error) {
+      console.error('Error getting user data:', error);
+    }
+    // Fallback to home if no user data
     navigate('/');
   };
 
   const handleBackToShop = () => {
-    navigate('/shop');
+    navigate('/toko');
   };
 
   if (isConfirming) {
