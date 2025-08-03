@@ -4,6 +4,9 @@ import { create } from '../../service/Product';
 import Button from '../../components/Button';
 import axios from 'axios';
 import Sidebar from '../../components/Sidebar';
+import { generateRandomCode } from './../../service/RandomUrl';
+import SuccessNotification from '../../components/SuccessNotification';
+import ErrorNotification from '../../components/ErrorNotification';
 
 const Create = () => {
   const [loading, setLoading] = useState(false);
@@ -11,6 +14,9 @@ const Create = () => {
   const user_id = user.id || '';
   const [categories, setCategories] = useState([]);
   const [errors, _setErrors] = useState({});
+  const [showSuccessNotification, setShowSuccessNotification] = useState(false);
+  const [showErrorNotification, setShowErrorNotification] = useState(false);
+  const [notificationMessage, setNotificationMessage] = useState('');
   const [form, setForm] = useState({
     user_id: user_id,
     nama_produk: '',
@@ -69,37 +75,64 @@ const Create = () => {
       const res = await create(formData);
       console.log('Response:', res.data);
       if (res.data.status === 'success') {
-        alert('Produk berhasil ditambahkan!');
-        window.location.href = '/toko';
+        setNotificationMessage('Produk berhasil ditambahkan! Anda akan diarahkan ke halaman produk.');
+        setShowSuccessNotification(true);
+        
+        // Redirect ke random URL setelah 2 detik
+        setTimeout(() => {
+          const randomUrl = `/${generateRandomCode()}`;
+          window.location.href = randomUrl;
+        }, 2000);
       } else {
-        alert(
+        setNotificationMessage(
           'Gagal menambah produk: ' +
             (res.data.message || res.data.errors || 'Unknown error')
         );
+        setShowErrorNotification(true);
       }
     } catch (error) {
       console.error('Error:', error.response?.data);
-      alert(
+      setNotificationMessage(
         'Terjadi kesalahan: ' +
           (error.response?.data?.errors?.foto || 'Gagal mengunggah produk.')
       );
+      setShowErrorNotification(true);
     }
     setLoading(false);
   };
 
   return (
-    <div className='flex min-h-screen bg-gray-50'>
-      <Sidebar />
-      <div className='flex-1 lg:ml-64 p-8'>
-        <div className='max-w-4xl mx-auto bg-white p-8 rounded-lg shadow-md'>
-          <h2 className='text-xl font-bold mb-6'>Tambah Produk</h2>
-          <form
-            onSubmit={handleSubmit}
-            className='space-y-6'
-            encType='multipart/form-data'>
-            {/* Hidden fields */}
-            <input name='user_id' type='hidden' value={form.user_id} readOnly />
-            <p className='text-black text-sm'>{user?.nama || '-'}</p>
+    <>
+      {/* Success Notification */}
+      <SuccessNotification
+        show={showSuccessNotification}
+        title="Produk Berhasil Ditambahkan!"
+        message={notificationMessage}
+        onClose={() => setShowSuccessNotification(false)}
+        autoClose={true}
+      />
+
+      {/* Error Notification */}
+      <ErrorNotification
+        show={showErrorNotification}
+        title="Gagal Menambah Produk"
+        message={notificationMessage}
+        onClose={() => setShowErrorNotification(false)}
+        autoClose={true}
+      />
+
+      <div className='flex min-h-screen bg-gray-50'>
+        <Sidebar />
+        <div className='flex-1 lg:ml-64 p-8'>
+          <div className='max-w-4xl mx-auto bg-white p-8 rounded-lg shadow-md'>
+            <h2 className='text-xl font-bold mb-6'>Tambah Produk</h2>
+            <form
+              onSubmit={handleSubmit}
+              className='space-y-6'
+              encType='multipart/form-data'>
+              {/* Hidden fields */}
+              <input name='user_id' type='hidden' value={form.user_id} readOnly />
+              <p className='text-black text-sm'>{user?.nama || '-'}</p>
 
             {/* Row 1: Nama Produk and Kategori */}
             <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
@@ -276,6 +309,7 @@ const Create = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 

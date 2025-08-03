@@ -8,10 +8,13 @@ import {
 } from './ui/Dropdwon';
 import { Link } from 'react-router-dom';
 import { generateRandomCode } from '../service/RandomUrl';
+import { encryptId } from '../lib/idEncryption';
 import { Settings2 } from 'lucide-react';
+
 const url = `/${generateRandomCode()}`;
 const personal = JSON.parse(localStorage.getItem('user') || '{}');
 const id = personal.id;
+const encryptedId = encryptId(id);
 
 const user = JSON.parse(localStorage.getItem('user') || '{}');
 const isAdmin = user.role === 'admin';
@@ -35,7 +38,7 @@ export const Modaldrop = () => {
             </Link>
           )}
 
-          <Link to={`/user/edit/${id}`}>
+          <Link to={`/user/edit/${encryptedId}`}>
             <DropdownMenuItem>Edit Profile</DropdownMenuItem>
           </Link>
           <DropdownMenuItem>Team Work</DropdownMenuItem>

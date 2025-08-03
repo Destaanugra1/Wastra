@@ -1,11 +1,39 @@
 import { useEffect, useState, useMemo } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import Navbar from '../../components/Navbar';
 import { Modaldrop } from '../../components/Menudrop';
 import { getUserById } from '../../service/user';
+import { decryptId, isValidToken } from '../../lib/idEncryption';
 
 const DetailUser = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
+
+  // Validasi token saat komponen dimount
+  const validatedId = useMemo(() => {
+    if (!id) return null;
+    
+    // Jika ID adalah angka langsung (untuk backward compatibility)
+    if (/^\d+$/.test(id)) {
+      return parseInt(id);
+    }
+    
+    // Jika ID adalah token terenkripsi
+    if (isValidToken(id)) {
+      return decryptId(id);
+    }
+    
+    // Jika token tidak valid, redirect ke home
+    return null;
+  }, [id]);
+
+  useEffect(() => {
+    if (!validatedId) {
+      console.error('Invalid user token');
+      navigate('/');
+      return;
+    }
+  }, [validatedId, navigate]);
 
   const [user, setUser] = useState(null);
   const [history, setHistory] = useState([]);
@@ -18,20 +46,26 @@ const DetailUser = () => {
 
   /* ---------- GET USER ---------- */
   useEffect(() => {
+    if (!validatedId) return;
+    
     (async () => {
       try {
-        const res = await getUserById(id);
+        const res = await getUserById(validatedId);
         console.log("Nama saya:", res.data.data);
         
         setUser(res.data.data ?? null);
       } catch (e) {
         console.error(e);
         setUser(null);
+        // Jika error karena ID tidak valid, redirect ke home
+        if (e.response?.status === 404 || e.message?.includes('Invalid')) {
+          navigate('/');
+        }
       } finally {
         setLoading(false);
       }
     })();
-  }, [id]);
+  }, [validatedId, navigate]);
 
   /* ---------- GET HISTORY ---------- */
   useEffect(() => {

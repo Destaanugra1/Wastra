@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { encryptId } from '../../lib/idEncryption';
 
 const PaymentSuccess = () => {
   const [searchParams] = useSearchParams();
@@ -119,7 +120,8 @@ const PaymentSuccess = () => {
         const userData = JSON.parse(storedUserData);
         const userId = userData.id;
         if (userId) {
-          navigate(`/user/detail/${userId}`);
+          const encryptedUserId = encryptId(userId);
+          navigate(`/user/detail/${encryptedUserId}`);
           return;
         }
       }

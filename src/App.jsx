@@ -1,5 +1,6 @@
 import { Route, Routes, useParams } from 'react-router-dom';
 import './App.css';
+import './styles/responsive.css';
 import Home from './page/Home';
 import Login from './page/auth/Login';
 import Register from './page/auth/Register';

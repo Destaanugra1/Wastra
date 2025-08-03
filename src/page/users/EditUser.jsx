@@ -1,12 +1,38 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getUserById, updateUser } from '../../service/user';
 import Alert from '../../components/Notification';
 import Navbar from '../../components/Navbar';
+import { decryptId, isValidToken } from '../../lib/idEncryption';
 
 const EditUser = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+
+  // Validasi dan dekripsi ID
+  const validatedId = useMemo(() => {
+    if (!id) return null;
+    
+    // Jika ID adalah angka langsung (untuk backward compatibility)
+    if (/^\d+$/.test(id)) {
+      return parseInt(id);
+    }
+    
+    // Jika ID adalah token terenkripsi
+    if (isValidToken(id)) {
+      return decryptId(id);
+    }
+    
+    return null;
+  }, [id]);
+
+  useEffect(() => {
+    if (!validatedId) {
+      console.error('Invalid user token');
+      navigate('/');
+      return;
+    }
+  }, [validatedId, navigate]);
 
   const [form, setForm] = useState({
     nama: '',
@@ -21,17 +47,24 @@ const EditUser = () => {
 
   // Fetch data user berdasarkan ID
   useEffect(() => {
-    getUserById(id).then((res) => {
+    if (!validatedId) return;
+    
+    getUserById(validatedId).then((res) => {
       const data = res.data.data;
       setForm({
-        nama: data.nama || '',
+        nama: data.username || '',
         email: data.email || '',
         provinsi: data.provinsi || '',
         kabupaten: data.kabupaten || '',
         deskripsi_alamat: data.deskripsi_alamat || '',
       });
+    }).catch((err) => {
+      console.error('Error fetching user data:', err);
+      if (err.response?.status === 404 || err.message?.includes('Invalid')) {
+        navigate('/');
+      }
     });
-  }, [id]);
+  }, [validatedId, navigate]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -44,7 +77,7 @@ const EditUser = () => {
     setErrors({});
 
     try {
-      const res = await updateUser(id, form);
+      const res = await updateUser(validatedId, form);
       if (res.data.status === 'success') {
         setAlertMsg('Profil berhasil diupdate!');
         setTimeout(() => navigate('/users'), 500);

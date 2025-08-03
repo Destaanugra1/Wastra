@@ -1,12 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
+import ChatBox from './ChatBox';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { ButtoClick } from './Button';
 import Logo from '../assets/Logo.png';
 import { useCart } from '../context/CartContext'; // <-- IMPORT HOOK
+import { encryptId } from '../lib/idEncryption';
+import { BotMessageSquareIcon } from 'lucide-react';
 
 const Navbar = () => {
   const [open, setOpen] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
+  const [csOpen, setCsOpen] = useState(false);
 
   // Ambil data langsung dari Context. Tidak perlu useEffect atau state lokal.
   const { cartItems, cartCount } = useCart();
@@ -15,6 +19,11 @@ const Navbar = () => {
   const handleAuth = !!localStorage.getItem('token');
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const id = user.id;
+
+  // Buat encrypted ID untuk digunakan di URL
+  const encryptedId = useMemo(() => {
+    return id ? encryptId(id) : '';
+  }, [id]);
 
   const handleLogout = () => {
     localStorage.clear();
@@ -54,6 +63,15 @@ const Navbar = () => {
         </div>
 
         <div className='flex items-center space-x-4'>
+          {/* Tombol Customer Service */}
+          <button
+            onClick={() => setCsOpen(true)}
+            className='relative p-2 text-white hover:text-[#dbaa7c] transition-colors flex items-center justify-center'
+            title='Chat CS Batik'
+          >
+            <BotMessageSquareIcon />
+            <span className='sr-only'>Buka Chat CS</span>
+          </button>
           {handleAuth && (
             <div className='relative'>
               <button
@@ -197,7 +215,7 @@ const Navbar = () => {
             </li>
             <li>
               <NavLink
-                to={`/user/detail/${id}`}
+                to={`/user/detail/${encryptedId}`}
                 className={({ isActive }) =>
                   `block py-2 px-3 rounded-sm md:bg-transparent md:p-0 ${
                     isActive
@@ -259,6 +277,13 @@ const Navbar = () => {
         <div
           className='fixed inset-0 z-40'
           onClick={() => setCartOpen(false)}></div>
+      )}
+
+      {/* ChatBox CS Popup */}
+      <ChatBox open={csOpen} onClose={() => setCsOpen(false)} />
+      {/* Overlay untuk close ChatBox jika CS terbuka */}
+      {csOpen && (
+        <div className='fixed inset-0 z-40' onClick={() => setCsOpen(false)}></div>
       )}
     </nav>
   );

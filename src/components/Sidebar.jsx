@@ -23,7 +23,7 @@ const Sidebar = () => {
   const menuItems = [
     { icon: Home, label: 'Halaman Admin', path: '/utama' },
     { icon: Package, label: 'Produk', path: `${url}` },
-    { icon: Plus, label: 'Tambah Produk', path: '/create' },
+    // { icon: Plus, label: 'Tambah Produk', path: '/create' },
     { icon: Users, label: 'Pengguna', path: '/users' },
     { icon: ShoppingCart, label: 'Pesanan', path: '/orders' },
     { icon: Shirt, label: 'Category', path: '/category' },

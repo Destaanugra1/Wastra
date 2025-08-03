@@ -1,12 +1,38 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Navbar from '../../components/Navbar';
 import { getProductById } from '../../service/Product';
 import { useCart } from '../../context/CartContext';
+import { extractIdFromSlug, isValidProductSlug } from '../../lib/productSlug';
 
 const DetailProduct = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+
+  // Validasi dan konversi slug ke ID
+  const validatedId = useMemo(() => {
+    if (!id) return null;
+    
+    // Jika ID adalah angka langsung (untuk backward compatibility)
+    if (/^\d+$/.test(id)) {
+      return parseInt(id);
+    }
+    
+    // Jika ID adalah slug produk
+    if (isValidProductSlug(id)) {
+      return extractIdFromSlug(id);
+    }
+    
+    return null;
+  }, [id]);
+
+  useEffect(() => {
+    if (!validatedId) {
+      console.error('Invalid product ID or slug:', id);
+      navigate('/toko');
+      return;
+    }
+  }, [validatedId, id, navigate]);
   const [product, setProduct] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
@@ -69,7 +95,7 @@ const DetailProduct = () => {
       }
       try {
         setIsLoading(true);
-        const res = await getProductById(id);
+        const res = await getProductById(validatedId);
         console.log('Respons dari backend:', res.data);
         if (res.data && res.data.status === 'success') {
           setProduct(res.data.data || null);
@@ -84,8 +110,11 @@ const DetailProduct = () => {
         setIsLoading(false);
       }
     };
-    fetchDetail();
-  }, [id]);
+    
+    if (validatedId) {
+      fetchDetail();
+    }
+  }, [validatedId, id]);
 
   // Function to update product stock
   const updateProductStock = useCallback(

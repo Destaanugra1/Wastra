@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Navbar from '../../components/Navbar';
 import { listProduct } from '../../service/Product';
+import { generateProductSlug } from '../../lib/productSlug';
 
 const Product = () => {
   const [products, setProducts] = useState([]);
@@ -87,7 +88,7 @@ const Product = () => {
                   className='bg-white rounded-lg shadow-sm hover:shadow-lg transition-shadow duration-300'
                   data-aos='fade-up'
                   data-aos-delay={index * 100}>
-                  <Link to={`/product/${product.id_product}`}>
+                  <Link to={`/product/${generateProductSlug(product.nama_produk, product.id_product)}`}>
                     <div className='aspect-square bg-gray-100 rounded-t-lg overflow-hidden'>
                       <img
                         src={`${VITE_API_URL}/${product.foto}`}

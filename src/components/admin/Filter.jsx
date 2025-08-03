@@ -34,19 +34,19 @@ const ProductFilter = ({
   console.log('Current Filter Category:', filterCategory);
 
   return (
-    <div className='mb-6 space-y-4 lg:space-y-0 lg:flex lg:items-center lg:space-x-4'>
+    <div className='mb-4 lg:mb-6 space-y-3 lg:space-y-0 lg:flex lg:items-center lg:space-x-4'>
       {/* Input pencarian */}
       <div className='relative flex-1 lg:max-w-md'>
         <Search
           className='absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400'
-          size={20}
+          size={18}
         />
         <input
           type='text'
           placeholder='Cari produk...'
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className='w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200'
+          className='w-full pl-10 pr-4 py-2.5 lg:py-3 text-sm lg:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200'
         />
       </div>
 
@@ -54,12 +54,12 @@ const ProductFilter = ({
       <div className='relative'>
         <Filter
           className='absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400'
-          size={20}
+          size={18}
         />
         <select
           value={filterCategory}
           onChange={(e) => setFilterCategory(e.target.value)}
-          className='pl-10 pr-8 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none bg-white min-w-[200px] appearance-none'>
+          className='w-full lg:w-auto pl-10 pr-8 py-2.5 lg:py-3 text-sm lg:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none bg-white min-w-[200px] appearance-none'>
           <option value=''>Semua Kategori</option>
           {validCategories.map((category) => (
             <option key={category.id_category} value={category.id_category}>

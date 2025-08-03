@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { extractIdFromSlug, isValidProductSlug } from '../lib/productSlug';
 
 const ApiUrl = import.meta.env.VITE_API_URL;
 
@@ -10,8 +11,19 @@ export function create(formData) {
   return axios.post(`${ApiUrl}/product/create`, formData);
 }
 
-export function getProductById(id) {
-  return axios.get(`${ApiUrl}/product/${id}`);
+export function getProductById(identifier) {
+  // Jika identifier adalah slug, extract ID-nya dulu
+  let productId = identifier;
+  
+  if (typeof identifier === 'string' && isValidProductSlug(identifier)) {
+    productId = extractIdFromSlug(identifier);
+    if (!productId) {
+      return Promise.reject(new Error('Invalid product slug'));
+    }
+  }
+  
+  console.log('getProductById called with identifier:', identifier, 'resolved to ID:', productId);
+  return axios.get(`${ApiUrl}/product/${productId}`);
 }
 
 export function updateProductStock(id, quantity_sold) {
