@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Navbar from '../../components/Navbar';
-import { getProductById } from '../../service/Product';
+import { getProductById, listProductPaginated } from '../../service/Product';
 import { useCart } from '../../context/CartContext';
 import { extractIdFromSlug, isValidProductSlug } from '../../lib/productSlug';
 
@@ -41,6 +41,7 @@ const DetailProduct = () => {
   const [orderId, setOrderId] = useState(null);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
   const [addingToCart, setAddingToCart] = useState(false);
+  
 
   const { handleAddToCart, cartItems } = useCart();
 
@@ -59,6 +60,9 @@ const DetailProduct = () => {
       window.history.replaceState({}, '', currentUrl.toString());
     }
   }, []);
+
+  // State untuk rekomendasi produk
+  const [recommendedProducts, setRecommendedProducts] = useState([]);
 
   const loadSnapScript = useCallback(() => {
     return new Promise((resolve, reject) => {
@@ -110,11 +114,25 @@ const DetailProduct = () => {
         setIsLoading(false);
       }
     };
-    
     if (validatedId) {
       fetchDetail();
     }
   }, [validatedId, id]);
+
+  // Ambil 5 produk rekomendasi dari listProductPaginated
+  useEffect(() => {
+    const fetchRecommended = async () => {
+      try {
+        const res = await listProductPaginated({ page: 1, per_page: 5, randomize: true });
+        if (res.data && res.data.status === 'success') {
+          setRecommendedProducts(res.data.data || []);
+        }
+      } catch (err) {
+        console.error('Gagal mengambil produk rekomendasi:', err);
+      }
+    };
+    fetchRecommended();
+  }, []);
 
   // Function to update product stock
   const updateProductStock = useCallback(
@@ -766,6 +784,35 @@ const DetailProduct = () => {
                 </div>
               )}
             </div>
+          </div>
+        </div>
+
+        {/* Rekomendasi Produk */}
+        <div className='max-w-7xl mx-auto px-4 pb-8'>
+          <h2 className='text-xl font-bold mb-4'>Rekomendasi Produk</h2>
+          <div className='grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4'>
+            {recommendedProducts.map((item) => (
+              <a
+                key={item.id_product}
+                href={`/product/${item.nama_produk.replace(/\s+/g, '-').toLowerCase()}-${item.id_product}`}
+                className='block bg-white rounded-lg shadow p-3 hover:shadow-lg transition-shadow hover:ring-2 hover:ring-red-400'
+              >
+                <img
+                  src={`${VITE_API_URL}/${item.foto}`}
+                  alt={item.nama_produk}
+                  className='w-full h-32 object-cover rounded mb-2'
+                  onError={(e) => { e.target.src = '/placeholder-product.jpg'; }}
+                />
+                <div className='font-semibold text-gray-900 line-clamp-2 mb-1'>{item.nama_produk}</div>
+                <div className='text-sm text-gray-600 mb-1'>
+                  {Number(item.harga).toLocaleString('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                </div>
+                <div className='flex justify-between items-center text-xs'>
+                  <span className={item.stok > 0 ? 'text-green-600' : 'text-red-600'}>Stok: {item.stok}</span>
+                  <span className='bg-blue-100 text-blue-800 px-2 py-1 rounded'>{item.kategori || 'Umum'}</span>
+                </div>
+              </a>
+            ))}
           </div>
         </div>
       </div>

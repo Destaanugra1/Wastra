@@ -57,11 +57,13 @@ const Cart = () => {
   }, [loadSnap]);
 
   const totalItems = cartItems.reduce(
-    (sum, item) => sum + Number(item.jumlah),
+    (sum, item) => sum + Number(item.quantity ?? item.jumlah),
     0
   );
   const totalPrice = cartItems.reduce(
-    (sum, item) => sum + Number(item.jumlah) * Number(item.harga),
+    (sum, item) =>
+      sum +
+      Number(item.quantity ?? item.jumlah) * Number(item.price ?? item.harga),
     0
   );
 
@@ -82,6 +84,7 @@ const Cart = () => {
 
     // Pastikan cartId valid
     const cartId = cartItems.length > 0 ? cartItems[0].cart_id : null;
+    console.log('Cart ID:', cartId, 'Cart items:', cartItems);
     if (!cartId) {
       alert('Keranjang tidak valid. Silakan coba lagi.');
       return;
@@ -90,7 +93,16 @@ const Cart = () => {
     setIsCheckingOut(true); // Set state checkout menjadi true
 
     try {
+      // Mapping cartItems: jumlah -> quantity, harga -> price, nama_produk -> name, product_id
+      const itemsForBackend = cartItems.map((item) => ({
+        id: item.product_id || item.id_item, // sesuaikan dengan backend
+        price: item.harga,
+        quantity: item.jumlah,
+        name: item.nama_produk,
+      }));
+
       console.log('Memulai proses checkout untuk cart_id:', cartId);
+      console.log('cartItems sebelum checkout:', cartItems);
       const response = await fetch(`${VITE_API_URL}/api/checkout`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -101,6 +113,11 @@ const Cart = () => {
           provinsi: user.provinsi,
           kabupaten: user.kabupaten,
           deskripsi_alamat: user.deskripsi_alamat,
+          items: itemsForBackend,
+          total_amount: itemsForBackend.reduce(
+            (sum, item) => sum + item.price * item.quantity,
+            0
+          ),
         }),
       });
 
@@ -125,6 +142,22 @@ const Cart = () => {
       window.snap.pay(data.snapToken, {
         onSuccess: function (result) {
           console.log('Midtrans onSuccess:', result);
+
+          // Update stock setelah pembayaran berhasil
+          fetch(`${VITE_API_URL}/api/payment/success`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              order_id: data.order_id,
+              items: itemsForBackend,
+            }),
+          })
+            .then((response) => response.json())
+            .then((data) =>
+              console.log('Pembayaran berhasil diproses server:', data)
+            )
+            .catch((err) => console.error('Error update stok:', err));
+
           alert('Pembayaran berhasil!');
           handleClearCart(); // Bersihkan keranjang setelah sukses
           navigate('/success');
@@ -184,66 +217,73 @@ const Cart = () => {
               </Link>
             </div>
           ) : (
-            <div className='space-y-4'>
-              {cartItems.map((item) => (
+            <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
+              {cartItems.map((item, idx) => (
                 <div
-                  key={item.id_item}
-                  className='flex items-center p-4 border rounded-lg hover:bg-gray-50'>
+                  key={item.id_item ?? item.id ?? idx}
+                  className='bg-white rounded-xl shadow-lg p-4 flex flex-col items-center border border-gray-200 hover:shadow-xl transition-shadow'>
                   <img
-                    src={`${VITE_API_URL}/${item.foto}`}
-                    alt={item.nama_produk}
-                    className='w-20 h-20 object-cover rounded-lg flex-shrink-0'
+                    src={`${VITE_API_URL}/${item.foto ?? ''}`}
+                    alt={item.name ?? item.nama_produk ?? ''}
+                    className='w-28 h-28 object-cover rounded-lg mb-3'
                   />
-                  <div className='flex-1 ml-4'>
-                    <h3 className='font-semibold text-lg mb-1'>
-                      {item.nama_produk}
-                    </h3>
-                    <p className='text-[#5a3b24] font-medium'>
-                      {Number(item.harga).toLocaleString('id-ID', {
-                        style: 'currency',
-                        currency: 'IDR',
-                      })}
-                    </p>
-                    <p className='text-sm text-gray-500'>Stok: {item.stok}</p>
-                  </div>
-                  <div className='flex items-center space-x-3 mr-4'>
+                  <h3 className='font-semibold text-lg mb-1 text-center'>
+                    {item.name ?? item.nama_produk}
+                  </h3>
+                  <p className='text-[#5a3b24] font-bold text-lg mb-1'>
+                    {Number(item.price ?? item.harga).toLocaleString('id-ID', {
+                      style: 'currency',
+                      currency: 'IDR',
+                    })}
+                  </p>
+                  <p className='text-sm text-gray-500 mb-2'>
+                    Stok: {item.stok ?? '-'}
+                  </p>
+                  <div className='flex items-center justify-center gap-3 mb-2'>
                     <button
                       onClick={() =>
-                        handleQuantityChange(item, Number(item.jumlah) - 1)
+                        handleQuantityChange(
+                          item,
+                          Number(item.quantity ?? item.jumlah) - 1
+                        )
                       }
-                      // Gunakan isCheckingOut juga untuk menonaktifkan tombol quantity
                       disabled={cartLoading || isCheckingOut}
-                      className='w-8 h-8 flex items-center justify-center border border-gray-300 rounded-full hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed'>
+                      className='w-10 h-10 flex items-center justify-center border border-gray-300 rounded-full bg-gray-50 text-xl font-bold hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed'>
                       −
                     </button>
-                    <span className='min-w-[2rem] text-center font-medium'>
-                      {item.jumlah}
+                    <span className='min-w-[2rem] text-center font-bold text-lg'>
+                      {item.quantity ?? item.jumlah}
                     </span>
                     <button
                       onClick={() =>
-                        handleQuantityChange(item, Number(item.jumlah) + 1)
+                        handleQuantityChange(
+                          item,
+                          Number(item.quantity ?? item.jumlah) + 1
+                        )
                       }
                       disabled={
-                        Number(item.jumlah) >= Number(item.stok) ||
+                        Number(item.quantity ?? item.jumlah) >=
+                          Number(item.stok ?? 9999) ||
                         cartLoading ||
                         isCheckingOut
                       }
-                      className='w-8 h-8 flex items-center justify-center border border-gray-300 rounded-full hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed'>
+                      className='w-10 h-10 flex items-center justify-center border border-gray-300 rounded-full bg-gray-50 text-xl font-bold hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed'>
                       +
                     </button>
                   </div>
-                  <div className='text-right mr-4 min-w-[100px]'>
-                    <p className='font-medium'>
-                      {(item.jumlah * item.harga).toLocaleString('id-ID', {
-                        style: 'currency',
-                        currency: 'IDR',
-                      })}
-                    </p>
-                  </div>
+                  <p className='font-bold text-[#5a3b24] text-lg mb-2'>
+                    {(
+                      Number(item.quantity ?? item.jumlah) *
+                      Number(item.price ?? item.harga)
+                    ).toLocaleString('id-ID', {
+                      style: 'currency',
+                      currency: 'IDR',
+                    })}
+                  </p>
                   <button
-                    onClick={() => handleRemoveItem(item.id_item)}
-                    disabled={cartLoading || isCheckingOut} // Gunakan isCheckingOut
-                    className='text-red-500 hover:text-red-700 text-xl font-bold w-8 h-8 flex items-center justify-center disabled:opacity-50'
+                    onClick={() => handleRemoveItem(item.id_item ?? item.id)}
+                    disabled={cartLoading || isCheckingOut}
+                    className='w-10 h-10 flex items-center justify-center rounded-full bg-red-100 text-red-600 text-2xl font-bold hover:bg-red-200 disabled:opacity-50 mt-2'
                     title='Hapus item'>
                     ×
                   </button>

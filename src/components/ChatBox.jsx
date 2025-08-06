@@ -4,7 +4,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 
 const quickReplies = [
     { text: 'Apa jam buka toko?', reply: 'Toko Batik kami buka setiap hari pukul 08.00 - 20.00.' },
-    { text: 'Apakah bisa COD?', reply: 'Kami tidak melayani Cash on Delivery (COD) atau cash or duel😊.' },
+    { text: 'Informasi lebih lanjut', reply: 'Bisa Hubungi Email Berikut destaanugrapratama@gmail.com.' },
     { text: 'Ada promo apa hari ini?', reply: 'Saat ini ada promo diskon 10% untuk pembelian di atas Rp200.000.' },
     { text: 'Bagaimana cara order?', reply: 'Anda bisa order melalui website ini atau chat admin kami.' },
 ];
@@ -95,7 +95,7 @@ Jika ada pertanyaan di luar konteks, jawab dengan: "Maaf, saya hanya dapat memba
 🏪 PROFIL TOKO:
 - Nama: Toko Batik Wastra
 - Spesialisasi: Batik premium dengan motif tradisional dan modern
-- Tahun Berdiri: 2018 (pengalaman 7 tahun)
+- Tahun Berdiri: 2025
 - Visi: Melestarikan budaya batik Indonesia dengan kualitas terbaik
 
 📍 LOKASI & JAM OPERASIONAL:

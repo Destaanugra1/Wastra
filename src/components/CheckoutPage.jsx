@@ -24,6 +24,10 @@ function CheckoutPage({ cartItems, totalAmount, userId, customerDetails }) { // 
     const MIDTRANS_ENV = import.meta.env.VITE_MIDTRANS_ENV || 'sandbox';
     const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
 
+    useEffect(() => {
+        console.log('cartItems:', cartItems);
+    }, [cartItems]);
+
     const loadSnapScript = useCallback(() => {
         return new Promise((resolve, reject) => {
             if (document.getElementById('midtrans-snap-script')) {
@@ -69,6 +73,7 @@ function CheckoutPage({ cartItems, totalAmount, userId, customerDetails }) { // 
             total_amount: totalAmount,
             customer_details: customerDetails,
         };
+        console.log('Data dikirim ke backend:', orderData);
 
         try {
             const response = await fetch(`${API_BASE_URL}/api/payment/create`, {
@@ -134,7 +139,9 @@ function CheckoutPage({ cartItems, totalAmount, userId, customerDetails }) { // 
             <h3>Ringkasan Pesanan</h3>
             {/* Tampilkan cartItems dan totalAmount di sini */}
             {cartItems && cartItems.map(item => (
-                <div key={item.id}>{item.name} x {item.quantity} = Rp {item.price * item.quantity}</div>
+                <div key={item.id}>
+                    {item.name} x {item.quantity} = Rp {item.price * item.quantity}
+                </div>
             ))}
             <p><strong>Total: Rp {totalAmount}</strong></p>
 
