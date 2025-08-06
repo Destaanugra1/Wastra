@@ -95,7 +95,7 @@ const Cart = () => {
     try {
       // Mapping cartItems: jumlah -> quantity, harga -> price, nama_produk -> name, product_id
       const itemsForBackend = cartItems.map((item) => ({
-        id: item.product_id || item.id_item, // sesuaikan dengan backend
+        id: item.id, // Gunakan id yang benar dari product
         price: item.harga,
         quantity: item.jumlah,
         name: item.nama_produk,
@@ -143,20 +143,20 @@ const Cart = () => {
         onSuccess: function (result) {
           console.log('Midtrans onSuccess:', result);
 
-          // Update stock setelah pembayaran berhasil
-          fetch(`${VITE_API_URL}/api/payment/success`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              order_id: data.order_id,
-              items: itemsForBackend,
-            }),
-          })
-            .then((response) => response.json())
-            .then((data) =>
-              console.log('Pembayaran berhasil diproses server:', data)
-            )
-            .catch((err) => console.error('Error update stok:', err));
+          console.log('Midtrans result:', result);
+          console.log(
+            'Transaksi sukses dengan order_id:',
+            result.order_id || data.order_id
+          );
+
+          // Di versi baru, kita tidak perlu mengurangi stok dari frontend
+          // karena sudah ditangani oleh MidtransNotificationController
+          // Yang akan dipanggil otomatis oleh Midtrans ketika pembayaran berhasil
+
+          // Alert pembayaran berhasil
+          console.log(
+            'Pembayaran berhasil diproses. Stok akan diupdate otomatis oleh sistem.'
+          );
 
           alert('Pembayaran berhasil!');
           handleClearCart(); // Bersihkan keranjang setelah sukses
